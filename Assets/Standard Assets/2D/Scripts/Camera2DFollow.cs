@@ -29,18 +29,15 @@ namespace UnityStandardAssets._2D
         private void FixedUpdate()
         {
             // only update lookahead pos if accelerating or changed direction
-            float xMoveDelta = (target.position - m_LastTargetPosition).x;
+            Vector2 moveDirection = target.position - m_LastTargetPosition;
+            var moveDelta = moveDirection.magnitude;
 
-            bool updateLookAheadTarget = Mathf.Abs(xMoveDelta) > lookAheadMoveThreshold;
+            var updateLookAheadTarget = Mathf.Abs(moveDelta) > lookAheadMoveThreshold;
 
             if (updateLookAheadTarget)
-            {
-                m_LookAheadPos = lookAheadFactor*Vector3.right*Mathf.Sign(xMoveDelta);
-            }
+                m_LookAheadPos = lookAheadFactor * ((Vector2)transform.position + moveDirection);//Vector3.right*Mathf.Sign(moveDelta);
             else
-            {
                 m_LookAheadPos = Vector3.MoveTowards(m_LookAheadPos, Vector3.zero, Time.deltaTime*lookAheadReturnSpeed);
-            }
 
             Vector3 aheadTargetPos = target.position + m_LookAheadPos + Vector3.forward*m_OffsetZ;
             Vector3 newPos = Vector3.SmoothDamp(transform.position, aheadTargetPos, ref m_CurrentVelocity, damping);
