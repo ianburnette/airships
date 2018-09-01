@@ -47,6 +47,6 @@ public class PlayerFuel : MonoBehaviour {
         UpdateFuelGauge();
     }
 
-    void DepleteFuel(float magnitude) => currentFuel -= magnitude * fuelDepletionRate;
+    void DepleteFuel(float magnitude) => currentFuel -= magnitude * fuelDepletionRate * Time.deltaTime;
     void UpdateFuelGauge() => fuelGauge.value = currentFuel;
 }

@@ -19,9 +19,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4230797125053998}
+  - component: {fileID: 114614630436763360}
   - component: {fileID: 212337077652483384}
   - component: {fileID: 58187938127203022}
-  - component: {fileID: 114614630436763360}
   m_Layer: 9
   m_Name: Settlement
   m_TagString: Untagged
