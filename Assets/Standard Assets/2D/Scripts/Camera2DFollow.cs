@@ -3,9 +3,10 @@ using UnityEngine;
 
 namespace UnityStandardAssets._2D
 {
-    public class Camera2DFollow : MonoBehaviour
-    {
-        public Transform target;
+    public class Camera2DFollow : MonoBehaviour {
+        public static Camera2DFollow staticCam;
+
+        [SerializeField] Transform target;
         public float damping = 1;
         public float lookAheadFactor = 3;
         public float lookAheadReturnSpeed = 0.5f;
@@ -15,15 +16,15 @@ namespace UnityStandardAssets._2D
         private Vector3 m_LastTargetPosition;
         private Vector3 m_CurrentVelocity;
         private Vector3 m_LookAheadPos;
+        public Transform Target { get { return target; } set { target = value; } }
 
         // Use this for initialization
-        private void Start()
-        {
+        private void Start() {
+            staticCam = this;
             m_LastTargetPosition = target.position;
             m_OffsetZ = (transform.position - target.position).z;
             transform.parent = null;
         }
-
 
         // Update is called once per frame
         private void FixedUpdate()

@@ -4,15 +4,26 @@ using System.Net.NetworkInformation;
 using UnityEngine;
 
 public class Settlement : MonoBehaviour {
-    void OnTriggerEnter2D(Collider2D other) => other.GetComponent<PlayerLand>().InLandingZone = true;
-    void OnTriggerExit2D(Collider2D other) => other.GetComponent<PlayerLand>().InLandingZone = false;
+    int playerLayer = 10;
+    Transform player;
+
+    void OnTriggerEnter2D(Collider2D other) {
+        if (other.gameObject.layer != playerLayer) return;
+        other.GetComponent<PlayerLand>().InLandingZone = true;
+        player = other.transform;
+    }
+    void OnTriggerExit2D(Collider2D other) {
+        if (other.gameObject.layer != playerLayer) return;
+        other.GetComponent<PlayerLand>().InLandingZone = false;
+        player = null;
+    }
 
     [SerializeField] SettlementInfo info;
     [SerializeField] Transform hanger;
     [SerializeField] List<Ship> ships;
 
     void OnEnable() {
-        foreach (Transform ship in hanger) ships.Add(ship.GetComponent<Ship>());
+        RefreshHanger();
         PlayerLand.OnLandingAtSettlement += OpenSettlementDialogue;
     }
 
@@ -20,5 +31,10 @@ public class Settlement : MonoBehaviour {
         PlayerLand.OnLandingAtSettlement -= OpenSettlementDialogue;
     }
 
-    void OpenSettlementDialogue() => SettlementCanvas.staticSettlementCanvas.OpenCanvas(info, ships);
+    void OpenSettlementDialogue() => SettlementCanvas.staticSettlementCanvas.OpenCanvas(this, info, ships, player);
+
+    public void RefreshHanger() {
+        ships.Clear();
+        foreach (Transform ship in hanger) ships.Add(ship.GetComponent<Ship>());
+    }
 }

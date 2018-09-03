@@ -17,16 +17,18 @@ public class PlayerStateMachine : MonoBehaviour {
 	}
 
 	void AttemptToggleLandingState() {
-		if (playerMovement.enabled && playerLand.InLandingZone && !playerLand.LandingState)
-			Land(true);
-		else if (!playerMovement.enabled && playerLand.LandingState) {
-			Land(false);
-		}
+		if (playerMovement.enabled && playerLand.InLandingZone && !playerLand.LandingState) Land(true);
+		//else if (!playerMovement.enabled && playerLand.LandingState) Land(false);
 	}
 
 	void Land(bool state) {
 		playerLand.ToggleLandingState(state);
 		playerMovement.enabled = !state;
+		playerLand.enabled = !state;
+	}
+
+	public void TakeOff() {
+		Land(false);
 	}
 
 	void OutOfFuel() {

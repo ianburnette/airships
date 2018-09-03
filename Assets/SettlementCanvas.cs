@@ -7,6 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityStandardAssets._2D;
 
 public class SettlementCanvas : MonoBehaviour {
     public static SettlementCanvas staticSettlementCanvas;
@@ -21,6 +22,9 @@ public class SettlementCanvas : MonoBehaviour {
 
     [SerializeField] Animator anim;
     List<Ship> ships;
+    [SerializeField] Ship currentlySelectedShip;
+    [SerializeField] Transform currentlySelectedTransform;
+    [SerializeField] Settlement currentSettlement;
 
     [SerializeField] EventSystem eventSystem;
 
@@ -36,6 +40,7 @@ public class SettlementCanvas : MonoBehaviour {
     void Start() {
         staticSettlementCanvas = this;
         currentState = SettlementCanvasState.Home;
+        eventSystem.SetSelectedGameObject(firstSelectedButtons[(int)currentState]);
     }
 
     public void SetSettlementCanvasState(int newStateInt) =>
@@ -43,15 +48,21 @@ public class SettlementCanvas : MonoBehaviour {
 
     public void SetSettlementCanvasState(SettlementCanvasState newState, SettlementCanvasState prevState) {
         currentState = newState;
-        if (currentState == SettlementCanvasState.Trade)
-            PopulateShipButtonInfo();
+        switch (currentState) {
+            case (SettlementCanvasState.Home):
+                SetTradeButtonStateDependingOnShipCount();
+                break;
+            case (SettlementCanvasState.Trade):
+                PopulateShipButtonInfo();
+                break;
+        }
         anim.SetBool(stateAnimation[prevState], false);
         anim.SetBool(stateAnimation[currentState], true);
         eventSystem.SetSelectedGameObject(firstSelectedButtons[(int)currentState]);
     }
 
     void PopulateShipButtonInfo() {
-        for (var i = 0; i < shipInfoPanels.Count; i++) PopulateShipButton(shipInfoPanels[i], ships[i]);
+        for (var i = 0; i < ships.Count; i++) PopulateShipButton(shipInfoPanels[i], ships[i]);
         if (shipInfoPanels.Count>ships.Count)
             for (var i = ships.Count; i < shipInfoPanels.Count; i++)
                 shipInfoPanels[i].panel.SetActive(false);
@@ -72,17 +83,36 @@ public class SettlementCanvas : MonoBehaviour {
         description.text = info.description;
     }
 
-    public void CloseCanvas() => ShowCanvas(false);
-
-    public void OpenCanvas(SettlementInfo info, List<Ship> ships) {
+    public void OpenCanvas(Settlement settlement, SettlementInfo info, List<Ship> ships, Transform player) {
+        currentSettlement = settlement;
+        Camera2DFollow.staticCam.Target = settlement.transform;
+        currentlySelectedTransform = player;
         SetInfo(info);
         this.ships = ships;
-        tradeButton.SetActive(this.ships.Count > 0);
+        SetTradeButtonStateDependingOnShipCount();
         ShowCanvas(true);
     }
 
+    void SetTradeButtonStateDependingOnShipCount() {
+        tradeButton.SetActive(this.ships.Count > 0);
+    }
+
+    public void CloseCanvas() {
+        Camera2DFollow.staticCam.Target = currentlySelectedTransform;
+        currentState = 0;
+        ShowCanvas(false);
+    }
+
     public void StartTrade(int shipIndex) {
+        currentlySelectedShip = ships[shipIndex];
         SetSettlementCanvasState(SettlementCanvasState.TradeConfirm, currentState);
+    }
+
+    public void CompleteTrade() {
+        PlayerShip.staticPlayerShip.NewShip(currentlySelectedShip);
+        currentlySelectedTransform = currentlySelectedShip.transform;
+        SetSettlementCanvasState(SettlementCanvasState.Home, currentState);
+        currentSettlement.RefreshHanger();
     }
 
     void ShowCanvas(bool state) {

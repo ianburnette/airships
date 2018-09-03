@@ -17,8 +17,8 @@ TagManager:
   - Settlement
   - Player
   - NPC
-  - 
-  - 
+  - Pickup
+  - PlayerShip
   - 
   - 
   - 
@@ -41,6 +41,21 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Ground
+    uniqueID: 74801139
+    locked: 0
+  - name: LowEnvironment
+    uniqueID: 3271876863
+    locked: 0
+  - name: NPCs
+    uniqueID: 107867263
+    locked: 0
   - name: Pickups
     uniqueID: 1821845295
+    locked: 0
+  - name: Player
+    uniqueID: 2766620659
+    locked: 0
+  - name: HighEnvironment
+    uniqueID: 3566449809
     locked: 0
