@@ -8,6 +8,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] float speed;
     [SerializeField] Transform transform;
     [SerializeField] Vector3 up;
+    [SerializeField] float angleOffset;
 
     Vector2 previousFramePosition;
 
@@ -28,7 +29,9 @@ public class PlayerMovement : MonoBehaviour {
     void Start() => previousFramePosition = transform.position;
     void Update() => FaceMovementDirection();
 
-    void FaceMovementDirection() => transform.rotation = Quaternion.AngleAxis(MovementAngle(MovementDirection()), up);
+    void FaceMovementDirection() => transform.rotation = Quaternion.AngleAxis
+                                        (MovementAngle
+                                             (MovementDirection()) + angleOffset, up);
     Vector2 MovementDirection() => rigidbody2D.velocity;
     float MovementAngle(Vector2 dir) => Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 

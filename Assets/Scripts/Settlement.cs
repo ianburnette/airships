@@ -7,20 +7,24 @@ public class Settlement : MonoBehaviour {
     int playerLayer = 10;
     Transform player;
 
-    void OnTriggerEnter2D(Collider2D other) {
-        if (other.gameObject.layer != playerLayer) return;
-        other.GetComponent<PlayerLand>().InLandingZone = true;
-        player = other.transform;
-    }
-    void OnTriggerExit2D(Collider2D other) {
-        if (other.gameObject.layer != playerLayer) return;
-        other.GetComponent<PlayerLand>().InLandingZone = false;
-        player = null;
-    }
-
     [SerializeField] SettlementInfo info;
     [SerializeField] Transform hanger;
     [SerializeField] List<Ship> ships;
+
+    void OnTriggerEnter2D(Collider2D other) {
+        if (other.gameObject.layer != playerLayer) return;
+        SetLandingZone(other, true);
+        player = other.transform;
+    }
+
+    void OnTriggerExit2D(Collider2D other) {
+        if (other.gameObject.layer != playerLayer) return;
+        SetLandingZone(other, false);
+        player = null;
+    }
+
+    void SetLandingZone(Component other, bool state) =>
+        other.GetComponent<PlayerLand>().InLandingZone = state;
 
     void OnEnable() {
         RefreshHanger();

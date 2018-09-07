@@ -10,6 +10,9 @@ public class PlayerShip : MonoBehaviour {
     [SerializeField] LayerMask playerShipLayer;
     [SerializeField] LayerMask npcLayer;
 
+    public delegate void ShipChanged(Animator anim);
+    public static event ShipChanged OnShipChanged;
+
     void Start() {
         staticPlayerShip = this;
     }
@@ -23,5 +26,6 @@ public class PlayerShip : MonoBehaviour {
         transform.rotation = currentShip.transform.rotation;
         currentShip.gameObject.layer = LayerMask.NameToLayer("PlayerShip");
         currentShip.transform.parent = transform;
+        OnShipChanged(newShip.GetComponent<Animator>());
     }
 }

@@ -21,7 +21,7 @@ public class SettlementCanvas : MonoBehaviour {
     [SerializeField] List<ShipInfoPanel> shipInfoPanels;
 
     [SerializeField] Animator anim;
-    List<Ship> ships;
+    [SerializeField] List<Ship> ships;
     [SerializeField] Ship currentlySelectedShip;
     [SerializeField] Transform currentlySelectedTransform;
     [SerializeField] Settlement currentSettlement;
