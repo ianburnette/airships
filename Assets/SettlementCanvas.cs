@@ -98,7 +98,7 @@ public class SettlementCanvas : MonoBehaviour {
     }
 
     public void CloseCanvas() {
-        Camera2DFollow.staticCam.Target = currentlySelectedTransform;
+        //Camera2DFollow.staticCam.Target = currentlySelectedTransform;
         currentState = 0;
         ShowCanvas(false);
     }
