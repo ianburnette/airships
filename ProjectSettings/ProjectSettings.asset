@@ -661,7 +661,7 @@ PlayerSettings:
   cloudServicesEnabled:
     UNet: 1
   facebookSdkVersion: 7.9.4
-  apiCompatibilityLevel: 2
+  apiCompatibilityLevel: 3
   cloudProjectId: 315c678d-3504-49dc-9da9-6e842f213880
   projectName: Airships
   organizationId: ian_burnette
