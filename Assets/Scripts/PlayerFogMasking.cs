@@ -34,7 +34,7 @@ public class PlayerFogMasking : MonoBehaviour {
         hitTexCoords = hit.textureCoord;
         hitTexCoordsInt = new Vector2Int((int)hitTexCoords.x, (int)hitTexCoords.y);
         DebugFogHit(hit);
-        ApplyTexture(hitTexCoordsInt);
+        ApplyTexture(hitTexCoords);
         WriteAndCloseTextureInput();
 
 
@@ -62,7 +62,10 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     void ApplyTexture(Vector2 hitTextureCoord) {
-        fogTexture.SetPixel((int)(hitTextureCoord.x * fogTexture.width), (int)(hitTextureCoord.y * fogTexture.height), Color.green);
+        fogTexture.SetPixel
+            ((int)(hitTextureCoord.x * fogTexture.width),
+             (int)(hitTextureCoord.y * fogTexture.height),
+             Color.green);
     }
 
     void WriteAndCloseTextureInput() {
@@ -76,8 +79,9 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     RaycastHit GetHit() {
-        RaycastHit hit = new RaycastHit();
+        var hit = new RaycastHit();
         Debug.DrawRay(transform.position,transform.forward, Color.magenta);
-        return Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask) ? hit : hit;
+        Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask);
+        return hit;
     }
 }
