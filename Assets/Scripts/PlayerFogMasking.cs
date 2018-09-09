@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class PlayerFogMasking : MonoBehaviour {
 
     [SerializeField] Texture2D fogTexture;
+
     [SerializeField] RenderTexture renderTexture;
     [SerializeField] Material mat;
     [SerializeField] Renderer renderer;
 
-    int at = 0;
     [SerializeField] float castDist;
     [SerializeField] LayerMask fogMask;
 
@@ -18,7 +19,11 @@ public class PlayerFogMasking : MonoBehaviour {
     public Vector3 hitPoint;
 
     void OnEnable() {
-        fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
+        //fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
+        //fogTexture.width = renderTexture.width;
+        //fogTexture.height = renderTexture.height;
+
+        fogTexture.filterMode = FilterMode.Point;
         renderer.material.mainTexture = fogTexture;
     }
 
@@ -29,20 +34,14 @@ public class PlayerFogMasking : MonoBehaviour {
             WriteAndCloseTextureInput();
             return;
         }
-
-        hitPoint = hit.point;
         hitTexCoords = hit.textureCoord;
-        hitTexCoordsInt = new Vector2Int((int)hitTexCoords.x, (int)hitTexCoords.y);
         DebugFogHit(hit);
         ApplyTexture(hitTexCoords);
         WriteAndCloseTextureInput();
-
-
         //for (var i =0; i<renderTexture.width*.2f;i++)
         //    for (var j =0;j<renderTexture.height;j++)
         //        fogTexture.SetPixel((at +i),j,new Color(1,0,0));
 //
-
         /*
         Graphics.SetRenderTarget(renderTexture);
         RenderTexture.active = renderTexture;
@@ -75,11 +74,11 @@ public class PlayerFogMasking : MonoBehaviour {
 
     void SetupTextureInput() {
         RenderTexture.active = renderTexture;
-        fogTexture.ReadPixels(new Rect(0, 0, fogTexture.width, fogTexture.height), 0, 0);
+        //fogTexture.ReadPixels(new Rect(0, 0, fogTexture.width, fogTexture.height), 0, 0);
     }
 
     RaycastHit GetHit() {
-        var hit = new RaycastHit();
+        RaycastHit hit;
         Debug.DrawRay(transform.position,transform.forward, Color.magenta);
         Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask);
         return hit;
