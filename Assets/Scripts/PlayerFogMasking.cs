@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-[ExecuteInEditMode]
 public class PlayerFogMasking : MonoBehaviour {
 
     [SerializeField] Texture2D fogTexture;
@@ -13,10 +13,12 @@ public class PlayerFogMasking : MonoBehaviour {
 
     [SerializeField] float castDist;
     [SerializeField] LayerMask fogMask;
+    [SerializeField] Color fogClearColor;
+
+    [FormerlySerializedAs("fogClearingTexture")] [SerializeField] Texture2D fogBrush;
 
     public Vector2 hitTexCoords;
-    public Vector2Int hitTexCoordsInt;
-    public Vector3 hitPoint;
+    [SerializeField] Color[] brush1dimensional;
 
     void OnEnable() {
         //fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
@@ -25,6 +27,16 @@ public class PlayerFogMasking : MonoBehaviour {
 
         fogTexture.filterMode = FilterMode.Point;
         renderer.material.mainTexture = fogTexture;
+        SetBrush();
+    }
+
+    void SetBrush() {
+        brush1dimensional = new Color[fogBrush.width * fogBrush.height];
+        for (var x = 0; x < fogBrush.width; x++) {
+            for (var y = 0; y < fogBrush.height; y++) {
+                brush1dimensional[x * y] = fogBrush.GetPixel(x, y);
+            }
+        }
     }
 
     void Update() {
@@ -61,10 +73,23 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     void ApplyTexture(Vector2 hitTextureCoord) {
-        fogTexture.SetPixel
-            ((int)(hitTextureCoord.x * fogTexture.width),
-             (int)(hitTextureCoord.y * fogTexture.height),
-             Color.green);
+       // var x = (int)hitTextureCoord.x * fogTexture.width;
+       // var y = (int)hitTextureCoord.y * fogTexture.height;
+
+        //fogTexture.SetPixel
+        //    ((int)(hitTextureCoord.x * fogTexture.width),
+        //     (int)(hitTextureCoord.y * fogTexture.height),
+        //     fogClearColor);
+////
+        var cols = new Color[1] { fogClearColor };
+        fogTexture.SetPixels((int)(hitTextureCoord.x * fogTexture.width),
+                             (int)(hitTextureCoord.y * fogTexture.height),
+                             fogBrush.width, fogBrush.height, brush1dimensional);
+        //
+        //fogTexture.SetPixel(x, y, fogClearColor);
+        //
+        //fogBrush.width, fogBrush.height,
+        //brush1dimensional);
     }
 
     void WriteAndCloseTextureInput() {
