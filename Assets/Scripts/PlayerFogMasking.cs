@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
+[ExecuteInEditMode]
 public class PlayerFogMasking : MonoBehaviour {
 
     [SerializeField] Texture2D fogTexture;
@@ -19,6 +20,7 @@ public class PlayerFogMasking : MonoBehaviour {
 
     public Vector2 hitTexCoords;
     [SerializeField] Color[] brush1dimensional;
+    [SerializeField] Color[,] brush2dimensional;
 
     void OnEnable() {
         //fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
@@ -32,9 +34,10 @@ public class PlayerFogMasking : MonoBehaviour {
 
     void SetBrush() {
         brush1dimensional = new Color[fogBrush.width * fogBrush.height];
-        for (var x = 0; x < fogBrush.width; x++) {
-            for (var y = 0; y < fogBrush.height; y++) {
-                brush1dimensional[x * y] = fogBrush.GetPixel(x, y);
+        for (var x = 0; x < fogBrush.height; x++) {
+            for (var y = 0; y < fogBrush.width; y++) {
+                var a = fogBrush.GetPixel(x, y).a;
+                brush1dimensional[(x * fogBrush.height) + y] = a < 1 ? fogBrush.GetPixel(x, y) : Color.clear;
             }
         }
     }
@@ -73,6 +76,24 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     void ApplyTexture(Vector2 hitTextureCoord) {
+        var currentRow = new List<Color>();
+        for (var x = 0; x < fogBrush.width; x++) {
+            for (var y = 0; y < fogBrush.height; y++) {
+                var a = fogBrush.GetPixel(x, y);
+                if (a.r < 1)
+                    currentRow.Add(a);
+            }
+
+            SetPixels(x, hitTextureCoord, currentRow);
+            currentRow.Clear();
+        }
+
+        /*
+        fogTexture.SetPixels((int)(hitTextureCoord.x * fogTexture.width) - fogBrush.width/2,
+                             (int)(hitTextureCoord.y * fogTexture.height) - fogBrush.height/2,
+                             fogBrush.width, fogBrush.height, brush1dimensional);
+
+                             */
        // var x = (int)hitTextureCoord.x * fogTexture.width;
        // var y = (int)hitTextureCoord.y * fogTexture.height;
 
@@ -81,15 +102,20 @@ public class PlayerFogMasking : MonoBehaviour {
         //     (int)(hitTextureCoord.y * fogTexture.height),
         //     fogClearColor);
 ////
-        var cols = new Color[1] { fogClearColor };
-        fogTexture.SetPixels((int)(hitTextureCoord.x * fogTexture.width),
-                             (int)(hitTextureCoord.y * fogTexture.height),
-                             fogBrush.width, fogBrush.height, brush1dimensional);
         //
         //fogTexture.SetPixel(x, y, fogClearColor);
         //
         //fogBrush.width, fogBrush.height,
         //brush1dimensional);
+    }
+
+    void SetPixels(int row, Vector2 hitTextureCoord, List<Color> currentRow) {
+        var colors = new Color[currentRow.Count];
+        for (var i = 0; i < currentRow.Count; i++) colors[i] = currentRow[i];
+
+        fogTexture.SetPixels((int)(hitTextureCoord.x * fogTexture.width) - fogBrush.width/2,
+                             ((int)(hitTextureCoord.y * fogTexture.height) - fogBrush.height/2) + row,
+                             currentRow.Count,1, colors);
     }
 
     void WriteAndCloseTextureInput() {
