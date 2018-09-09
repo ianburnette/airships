@@ -80,7 +80,7 @@ public class PlayerFogMasking : MonoBehaviour {
         for (var x = 0; x < fogBrush.width; x++) {
             for (var y = 0; y < fogBrush.height; y++) {
                 var a = fogBrush.GetPixel(x, y);
-                if (a.r < 1)
+                if (a.a < 1)
                     currentRow.Add(a);
             }
 
