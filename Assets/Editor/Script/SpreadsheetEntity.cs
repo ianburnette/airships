@@ -6,11 +6,11 @@ using Google.GData.Client;
 using Google.GData.Spreadsheets;
 
 [InitializeOnLoad]
-public class SpreadsheetEntity : MonoBehaviour 
+public class SpreadsheetEntity : MonoBehaviour
 {
 	// enter Client ID and Client Secret values
-	const string _ClientId = "";
-	const string _ClientSecret = "";
+	const string _ClientId = "816462670014-juj7va6ffugtfcuogpgfagkr423g6kvd.apps.googleusercontent.com";
+	const string _ClientSecret = "6s66alg4H3CyqyytQ6_PZlmA";
 	// enter Access Code after getting it from auth url
 	const string _AccessCode = "";
 	// enter Auth 2.0 Refresh Token and AccessToken after succesfully authorizing with Access Code
@@ -22,8 +22,8 @@ public class SpreadsheetEntity : MonoBehaviour
 
 	static SpreadsheetsService service;
 
-	
-	public static GOAuth2RequestFactory RefreshAuthenticate() 
+
+	public static GOAuth2RequestFactory RefreshAuthenticate()
 	{
 		OAuth2Parameters parameters = new OAuth2Parameters()
 		{
@@ -42,11 +42,11 @@ public class SpreadsheetEntity : MonoBehaviour
 	static void Auth()
 	{
 		GOAuth2RequestFactory requestFactory = RefreshAuthenticate();
-		
-		service = new SpreadsheetsService("MySpreadsheetIntegration-v1");  
+
+		service = new SpreadsheetsService("MySpreadsheetIntegration-v1");
 		service.RequestFactory = requestFactory;
 	}
-	
+
 
 	// Use this for initialization
 	static SpreadsheetEntity(){
@@ -55,20 +55,20 @@ public class SpreadsheetEntity : MonoBehaviour
 			Init();
 			return;
 		}
-		
+
 		Auth();
-		
+
 		Google.GData.Spreadsheets.SpreadsheetQuery query = new Google.GData.Spreadsheets.SpreadsheetQuery();
-		
+
 		// Make a request to the API and get all spreadsheets.
 		SpreadsheetFeed feed = service.Query(query);
-		
+
 		if (feed.Entries.Count == 0)
 		{
 			Debug.Log("There are no spreadsheets in your docs.");
 			return;
 		}
-		
+
 		AccessSpreadsheet(feed);
 	}
 
@@ -93,14 +93,14 @@ public class SpreadsheetEntity : MonoBehaviour
 			return;
 		}
 
-		
+
 		// Get the first worksheet of the first spreadsheet.
 		WorksheetFeed wsFeed = spreadsheet.Worksheets;
 		WorksheetEntry worksheet = (WorksheetEntry)wsFeed.Entries[0];
-		
+
 		// Define the URL to request the list feed of the worksheet.
 		AtomLink listFeedLink = worksheet.Links.FindService(GDataSpreadsheetsNameTable.ListRel, null);
-		
+
 		// Fetch the list feed of the worksheet.
 		ListQuery listQuery = new ListQuery(listFeedLink.HRef.ToString());
 		ListFeed listFeed = service.Query(listQuery);
@@ -113,10 +113,10 @@ public class SpreadsheetEntity : MonoBehaviour
 
 
 	}
-	
+
 	static void Init()
 	{
-		
+
 		////////////////////////////////////////////////////////////////////////////
 		// STEP 1: Configure how to perform OAuth 2.0
 		////////////////////////////////////////////////////////////////////////////
@@ -134,13 +134,13 @@ public class SpreadsheetEntity : MonoBehaviour
 		string SCOPE = "https://www.googleapis.com/auth/drive https://spreadsheets.google.com/feeds https://docs.google.com/feeds";
 
 		string REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
-		
+
 		string TOKEN_TYPE = "refresh";
-		
+
 		////////////////////////////////////////////////////////////////////////////
 		// STEP 2: Set up the OAuth 2.0 object
 		////////////////////////////////////////////////////////////////////////////
-		
+
 		// OAuth2Parameters holds all the parameters related to OAuth 2.0.
 		OAuth2Parameters parameters = new OAuth2Parameters();
 
@@ -149,15 +149,15 @@ public class SpreadsheetEntity : MonoBehaviour
 		parameters.ClientSecret = CLIENT_SECRET;
 
 		parameters.RedirectUri = REDIRECT_URI;
-		
+
 		////////////////////////////////////////////////////////////////////////////
 		// STEP 3: Get the Authorization URL
 		////////////////////////////////////////////////////////////////////////////
 
 		parameters.Scope = SCOPE;
-		
+
 		parameters.AccessType = "offline"; // IMPORTANT and was missing in the original
-		
+
 		parameters.TokenType = TOKEN_TYPE; // IMPORTANT and was missing in the original
 
 		// Authorization url.
@@ -184,8 +184,8 @@ public class SpreadsheetEntity : MonoBehaviour
 		string refreshToken = parameters.RefreshToken;
 		Debug.Log("OAuth Access Token: " + accessToken + "\n");
 		Debug.Log("OAuth Refresh Token: " + refreshToken + "\n");
-	
+
 	}
-	
+
 }
 
