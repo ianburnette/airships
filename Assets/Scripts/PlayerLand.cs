@@ -14,16 +14,19 @@ public class PlayerLand : MonoBehaviour {
     public delegate void LandingAtSettlement();
     public static event LandingAtSettlement OnLandingAtSettlement;
 
-    void OnEnable() {
+    bool outOfFuel;
 
-    }
+    void OnEnable() => PlayerFuel.OnFuelDepleted += OutOfFuel;
+    void OnDisable() => PlayerFuel.OnFuelDepleted -= OutOfFuel;
 
     public void ToggleLandingState(bool state) {
         landingState = state;
         OnLandingStateChange?.Invoke(landingState);
-        if (landingState)
+        if (landingState && !outOfFuel)
             LandAtSettlement();
     }
 
     void LandAtSettlement() => OnLandingAtSettlement?.Invoke();
+
+    void OutOfFuel() => outOfFuel = true;
 }
