@@ -56,7 +56,7 @@ public class PlayerMovement : MonoBehaviour {
     float MovementAngle(Vector2 dir) => Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
     void ProcessMovementInput(Vector2 input) {
-        ApplyMovement(SanitizeInput(input));
+        ApplyMovement(SanitizeInput(input.normalized));
         mostRecentInput = input;
     }
 
