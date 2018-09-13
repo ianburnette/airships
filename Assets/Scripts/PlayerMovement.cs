@@ -64,16 +64,17 @@ public class PlayerMovement : MonoBehaviour {
 
     void ProcessMovementInput(Vector2 input) {
         //DEBUG
-        currentInputEvaluation = EvaluateInput(CastRays(GetRays()));
+        currentInputEvaluation = EvaluateInput(CastRays(GetRays(input)));
         //END DEBUG
-        //TestInput (input.normalized);
+        //if (input!=Vector2.zero)
+        //    TestInput (input.normalized);
+        mostRecentInput = input != Vector2.zero ? input : mostRecentInput;
         ApplyMovement(input);
-        mostRecentInput = input;
     }
 
     void TestInput(Vector2 currentInput) {
-        distances = CastRays(GetRays());
-        var eval = EvaluateInput(distances);
+        distances = CastRays(GetRays(currentInput));
+            var eval = EvaluateInput(distances);
         if (eval == InputEvaluation.valid)
             ApplyMovement(currentInput);
         else
@@ -84,17 +85,13 @@ public class PlayerMovement : MonoBehaviour {
         switch (eval) {
         case InputEvaluation.facingWall:
             return Vector2.zero;
-            break;
         case InputEvaluation.wallToRight:
             return inputToMutate.Rotate(-degreesPerInputMutation);
-            break;
         case InputEvaluation.wallToLeft:
             return inputToMutate.Rotate(degreesPerInputMutation);
-            break;
         case InputEvaluation.valid:
             print("trying to mutate valid input");
             return inputToMutate;
-            break;
         default:
             throw new ArgumentOutOfRangeException(nameof(eval), eval, null);
         }
@@ -133,12 +130,13 @@ public class PlayerMovement : MonoBehaviour {
         return hit.distance;
     }
 
-    Ray[] GetRays() {
+    Ray[] GetRays(Vector2 currentInput) {
         //TODO this should look at input, not only facing direction (and perhaps not at all)
         var rays = new Ray[3];
         var pos = (Vector2)transform.position;
-        var dir = (Vector2)transform.up * movementDirectionRayLength;
-        var offset = pos + ((Vector2)transform.up * rayOffset.y);
+        //var dir = (Vector2)transform.up * movementDirectionRayLength;
+        var dir = currentInput * movementDirectionRayLength;
+        var offset = pos + ((Vector2)currentInput * rayOffset.y);
 
         rays[0] = new Ray(offset, dir);
         rays[1] = new Ray(offset - ((Vector2)transform.right * rayOffset.x), dir);

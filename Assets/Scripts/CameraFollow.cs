@@ -23,7 +23,7 @@ public class CameraFollow : MonoBehaviour {
         rb = target.GetComponent<Rigidbody2D>();
     }
 
-    void FixedUpdate() =>
+    void Update() =>
         transform.position = Vector2.Lerp(transform.position, GetPosition(), followSpeed * Time.deltaTime);
 
     Vector2 GetPosition() {
