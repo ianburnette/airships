@@ -65,8 +65,8 @@ public class MapGeneration : MonoBehaviour {
 			for (var j = 0; j < mapTexture.height; j++) {
 				var tile = GetTileFromMap(i, j);
 				tilemap.SetTile(new Vector3Int(i, j, 1), tile);
-				if (tile == tiles[0] || tile == tiles[1]) CreateTree(i, j, 0);
-				if (tile == tiles[2]) CreateTree(i, j, 1);
+				//if (tile == tiles[0] || tile == tiles[1]) CreateTree(i, j, 0);
+				//if (tile == tiles[2]) CreateTree(i, j, 1);
 			}
 		tilemap.RefreshAllTiles();
 		generate = false;
