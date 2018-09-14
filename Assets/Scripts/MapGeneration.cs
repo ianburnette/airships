@@ -13,6 +13,9 @@ public class MapGeneration : MonoBehaviour {
 
 	[SerializeField] Texture2D mapTexture;
 	[SerializeField] Tilemap tilemap;
+	[SerializeField] Vector3Int tilemapChunkSize = new Vector3Int(20, 20,0);
+
+	[SerializeField] GameObject tilemapPrefab;
 	[SerializeField] List<TileBase> tiles;
 	[SerializeField] List<Color> colorsInMap;
 	[SerializeField] List<ColorTileDict> colorTileDict;
@@ -20,16 +23,18 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] Transform prefabParent;
 	[SerializeField] Vector3 prefabTileOffset;
 	[SerializeField] float rotationVariance;
+	[SerializeField] bool generating;
+	[SerializeField] float waitTime;
 
 	void Update() {
 		if (generate) {
+			generating = true;
 			CreateDict();
 			Generate();
+			generate = false;
 		}
 
-		if (setup) {
-			Setup();
-		}
+		if (setup) Setup();
 	}
 
 	void Setup() {
@@ -50,26 +55,28 @@ public class MapGeneration : MonoBehaviour {
 	}
 
 	void Generate() {
-		tilemap.ClearAllTiles();
-		var prevPar = prefabParent.parent;
-		var prevPos = prefabParent.position;
-		DestroyImmediate(prefabParent);
-		var parent = new GameObject("prefabParent");
-		parent.transform.parent = prevPar;
-		parent.transform.position = prevPos;
+		var chunkWidth = tilemapChunkSize.x;
+		var chunkHeight = tilemapChunkSize.y;
+		for (var i = 0; i<mapTexture.width / chunkWidth; i++)
+			for (var j = 0; j < mapTexture.height / chunkHeight; j++) {
+				var newMap = Instantiate(tilemapPrefab, new Vector2(i * chunkWidth, j * chunkHeight),
+				                         Quaternion.identity, transform);
+				var thisTileMap = newMap.GetComponent<Tilemap>();
+				thisTileMap.size = tilemapChunkSize;
+				thisTileMap.transform.name = "tilemap: " + i + ", " + j;
+				for (var k = 0; k < chunkWidth; k++){
+					for (var l = 0; l < chunkHeight; l++) {
+						var tile = GetTileFromMap(k + i * chunkWidth, l + j * chunkHeight);
 
-		//foreach (Transform child in prefabParent)
-		//	DestroyImmediate(child.gameObject);
-		tilemap.size = new Vector3Int(mapTexture.width, mapTexture.height, 1);
-		for (var i=0; i<mapTexture.width;i++)
-			for (var j = 0; j < mapTexture.height; j++) {
-				var tile = GetTileFromMap(i, j);
-				tilemap.SetTile(new Vector3Int(i, j, 1), tile);
-				//if (tile == tiles[0] || tile == tiles[1]) CreateTree(i, j, 0);
-				//if (tile == tiles[2]) CreateTree(i, j, 1);
+						var position = new Vector3Int(k, l, 1);
+						thisTileMap.SetTile(position, tile);
+						thisTileMap.RefreshTile(position);
+						//if (tile == tiles[0] || tile == tiles[1]) CreateTree(i, j, 0);
+						//if (tile == tiles[2]) CreateTree(i, j, 1);
+					}
 			}
-		tilemap.RefreshAllTiles();
-		generate = false;
+		}
+		generating = false;
 	}
 
 	void CreateTree(int i, int j, int treeType) {
