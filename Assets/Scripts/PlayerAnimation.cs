@@ -6,17 +6,21 @@ public class PlayerAnimation : MonoBehaviour {
 	[SerializeField] Animator anim;
 
 	void OnEnable() {
-		PlayerLand.OnLandingStateChange += UpdateLandingState;
+		PlayerStateMachine.onLandingStateChange += UpdateLandingState;
 		PlayerShip.OnShipAnimatorChanged += ChangeShipAnimator;
 	}
 
 	void OnDisable() {
-		PlayerLand.OnLandingStateChange -= UpdateLandingState;
+		PlayerStateMachine.onLandingStateChange -= UpdateLandingState;
 		PlayerShip.OnShipAnimatorChanged -= ChangeShipAnimator;
 	}
 
 	void Start() => anim.SetBool("landingState", false);
 
 	void UpdateLandingState(bool state) => anim.SetBool("landingState", state);
-	void ChangeShipAnimator(Animator newAnim) => anim = newAnim;
+	void ChangeShipAnimator(Animator newAnim) {
+		UpdateLandingState(true);
+		anim = newAnim;
+		UpdateLandingState(false);
+	}
 }

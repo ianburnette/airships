@@ -35,10 +35,12 @@ public class SettlementCanvas : MonoBehaviour {
         { SettlementCanvasState.Trade, "ShowTrade" },
         { SettlementCanvasState.TradeConfirm, "ShowTradeConfirm" },
     };
-    [SerializeField] List<GameObject> firstSelectedButtons;
+
     [SerializeField] int currentlySelectedButtonIndex;
     [SerializeField] float arrowSpeed;
     [SerializeField] float inputThreshold = .5f;
+    [SerializeField] float noInputThreshold = .05f;
+    bool waitForInputReset;
 
     void OnEnable() {
         PlayerInput.OnMovement += MoveCursor;
@@ -51,21 +53,21 @@ public class SettlementCanvas : MonoBehaviour {
     }
 
     void MoveCursor(Vector2 input) {
-        if (input.y > inputThreshold)
-            AttemptButtonChange(true);
-        else if (input.y < -inputThreshold)
-            AttemptButtonChange(false);
+        if (Mathf.Abs(input.y) > inputThreshold && !waitForInputReset) {
+            AttemptButtonChange(!(input.y > inputThreshold));
+            waitForInputReset = true;
+        } else if (Mathf.Abs(input.y) < noInputThreshold) waitForInputReset = false;
     }
 
-    void AttemptButtonChange(bool state) {
-        if (state) {
-            for (var i = currentlySelectedButtonIndex; i < buttons.Length; i++) {
+    void AttemptButtonChange(bool down) {
+        if (down) {
+            for (var i = currentlySelectedButtonIndex + 1; i < buttons.Length; i++) {
                 if (!buttons[i].gameObject.activeSelf) continue;
                 currentlySelectedButtonIndex = i;
                 break;
             }
         } else {
-            for (var i = currentlySelectedButtonIndex; i > 0; i--) {
+            for (var i = currentlySelectedButtonIndex - 1; i > -1; i--) {
                 if (!buttons[i].gameObject.activeSelf) continue;
                 currentlySelectedButtonIndex = i;
                 break;
@@ -129,10 +131,10 @@ public class SettlementCanvas : MonoBehaviour {
     }
 
     void Update() {
-        arrow.position = Vector2.Lerp(arrow.position,
-                                      new Vector2(arrow.position.x,
-                                                  buttons[currentlySelectedButtonIndex].transform.position.y),
-                                      arrowSpeed * Time.deltaTime);
+ //       arrow.position = Vector2.Lerp(arrow.position,
+ //                                     new Vector2(arrow.position.x,
+ //                                                 buttons[currentlySelectedButtonIndex].transform.position.y),
+ //                                     arrowSpeed * Time.deltaTime);
     }
 
     public void OpenCanvas(Settlement settlement,
@@ -176,9 +178,9 @@ public class SettlementCanvas : MonoBehaviour {
         buttonForShipInfo.gameObject.SetActive(true);
         buttonForShipInfo.text = "<b>" + ship.shipName + "</b>";
         buttonForShipInfo.text += "/n Capacity: " + ship.capacity;
-        buttonForShipInfo.text += "/n Fuel Efficiency: " + ship.fuelDepletionRate;
-        buttonForShipInfo.text += "/n Handling: " + ship.speed;
-        buttonForShipInfo.text += "/n Boost Fuel Cost:" + ship.boostCost;
+        buttonForShipInfo.text += "/n Fuel Efficiency: " + ship.fuelEfficiency;
+        buttonForShipInfo.text += "/n Handling: " + ship.handling;
+        buttonForShipInfo.text += "/n Boost Fuel Cost:" + ship.boostEfficiency;
         buttonForShipInfo.text += "/n Trade Cost:" + ship.cost;
     }
 
@@ -199,7 +201,7 @@ public class SettlementCanvas : MonoBehaviour {
     public void CompleteTrade(Ship newShip) {
         PlayerShip.staticPlayerShip.NewShip(newShip);
         currentlySelectedTransform = newShip.transform;
-        currentSettlement.RefreshHanger();
+        //currentSettlement.RefreshHanger();
     }
 
     void ShowCanvas(bool state) {

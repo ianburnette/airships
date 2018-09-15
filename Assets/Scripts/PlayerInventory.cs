@@ -20,11 +20,13 @@ public class PlayerInventory : MonoBehaviour {
             currentShip = transform.GetChild(0).GetComponent<Ship>();
         SetupInventory();
         CalculateInventory(currentShip);
-        PlayerLand.OnLandingAtSettlement += RemoveItemsFromInventory; //TODO this isn't final behavior
+        Settlement.OnEnterSettlement += RemoveItemsFromInventory;
         PlayerShip.OnShipChanged += CalculateInventory;
     }
 
-    void OnDisable() => PlayerLand.OnLandingAtSettlement -= RemoveItemsFromInventory;
+    void OnDisable() {
+        Settlement.OnEnterSettlement -= RemoveItemsFromInventory;
+    }
 
     void SetupInventory() {
         foreach (Transform o in inventoryBase) {

@@ -9,17 +9,29 @@ public class Ship : MonoBehaviour {
 	[SerializeField] Sprite shipSprite;
 	[SerializeField] SpriteRenderer shipSpriteRenderer;
 
+	[SerializeField] public bool playerShip;
+
 	[SerializeField] public string shipName;
-	[Range(10,100)] [SerializeField] public int capacity;
-	[Range(1f,20f)] [SerializeField] public float fuelDepletionRate;
-	[Range(25,100)] [SerializeField] public int speed;
-	[SerializeField] public float boostCost;
+	[Range(0,1)] [SerializeField] public int capacity;
+	[Range(0,1)] [SerializeField] public float fuelEfficiency;
+	[Range(0,1)] [SerializeField] public float handling;
+	[Range(0,1)] [SerializeField] public float boostEfficiency;
+
 	[SerializeField] public int cost;
+	[SerializeField] public Vector2 canvasOffset;
 
 	void OnEnable() => shipSpriteRenderer = GetComponent<SpriteRenderer>();
 
 	void Update() {
 		if (shipSpriteRenderer.sprite != shipSprite)
 			shipSpriteRenderer.sprite = shipSprite;
+	}
+
+	void OnTriggerEnter2D(Collider2D other) {
+		if (!playerShip) ShipCanvas.instance.Activate(true, this);
+	}
+
+	void OnTriggerExit2D(Collider2D other) {
+		if (!playerShip) ShipCanvas.instance.Activate(false, null);
 	}
 }

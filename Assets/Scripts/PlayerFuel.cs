@@ -9,6 +9,7 @@ public class PlayerFuel : MonoBehaviour {
     [SerializeField] float currentFuel;
     [SerializeField] float fuelDepletionRate;
     [SerializeField] float masterFuelDepletionRate;
+    [SerializeField] float masterRefuelRate;
 
     bool outOfFuel;
 
@@ -21,17 +22,17 @@ public class PlayerFuel : MonoBehaviour {
 
     void OnEnable() {
         PlayerMovement.OnMove += OnMovementApplied;
-        PlayerLand.OnLandingAtSettlement += Refuel;
+//        PlayerLand.OnLandingAtSettlement += Refuel;
         PlayerShip.OnShipChanged += NewShipFuel;
     }
 
     void NewShipFuel(Ship newShip) {
-        fuelDepletionRate = newShip.fuelDepletionRate;
+        fuelDepletionRate = newShip.fuelEfficiency;
     }
 
     void OnDisable() {
         PlayerMovement.OnMove -= OnMovementApplied;
-        PlayerLand.OnLandingAtSettlement -= Refuel;
+      //  PlayerLand.OnLandingAtSettlement -= Refuel;
     }
 
     void OnMovementApplied(float magnitude) {
@@ -51,6 +52,14 @@ public class PlayerFuel : MonoBehaviour {
         outOfFuel = false;
         currentFuel = maxFuel;
         UpdateFuelGauge();
+    }
+
+    public void Increment() {
+        outOfFuel = false;
+        if (currentFuel < 0)
+            currentFuel = 0;
+        if (currentFuel < 1)
+            currentFuel += masterRefuelRate * Time.deltaTime;
     }
 
     void DepleteFuel(float magnitude) =>

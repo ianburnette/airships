@@ -21,12 +21,18 @@ public class PlayerShip : MonoBehaviour {
     public void NewShip(Ship newShip) {
         currentShip.transform.parent = null;
         currentShip.gameObject.layer = LayerMask.NameToLayer("NPC");
+        currentShip.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer("NPC");
+        currentShip.playerShip = false;
+
         currentShip = newShip;
 
         transform.position = currentShip.transform.position;
         transform.rotation = currentShip.transform.rotation;
         currentShip.gameObject.layer = LayerMask.NameToLayer("PlayerShip");
+        currentShip.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer("PlayerShip");
         currentShip.transform.parent = transform;
+        currentShip.playerShip = true;
+
         OnShipAnimatorChanged?.Invoke(newShip.GetComponent<Animator>());
         OnShipChanged?.Invoke(newShip);
     }

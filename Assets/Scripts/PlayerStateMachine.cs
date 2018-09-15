@@ -6,25 +6,29 @@ public class PlayerStateMachine : MonoBehaviour {
 	[SerializeField] PlayerMovement playerMovement;
 	[SerializeField] PlayerLand playerLand;
 
+	bool inSettlement;
+
+	public delegate void LandingStateChange(bool state);
+	public static LandingStateChange onLandingStateChange;
+
 	void OnEnable() {
-		PlayerInput.OnInteract += AttemptToggleLandingState;
 		PlayerFuel.OnFuelDepleted += OutOfFuel;
+		Settlement.OnEnterSettlement += OnEnteredSettlement;
+		Settlement.OnExitSettlement += OnExitedSettlement;
 	}
 
 	void OnDisable() {
-		PlayerInput.OnInteract -= AttemptToggleLandingState;
 		PlayerFuel.OnFuelDepleted -= OutOfFuel;
+		Settlement.OnEnterSettlement -= OnEnteredSettlement;
+		Settlement.OnExitSettlement -= OnExitedSettlement;
 	}
 
-	void AttemptToggleLandingState() {
-		if (playerMovement.enabled && playerLand.InLandingZone && !playerLand.LandingState) Land(true);
-		//else if (!playerMovement.enabled && playerLand.LandingState) Land(false);
-	}
+	void OnEnteredSettlement() => inSettlement = true;
+	void OnExitedSettlement() => inSettlement = false;
 
 	void Land(bool state) {
-		playerLand.ToggleLandingState(state);
+		onLandingStateChange(state);
 		playerMovement.enabled = !state;
-		playerLand.enabled = !state;
 	}
 
 	public void TakeOff() {
@@ -32,14 +36,14 @@ public class PlayerStateMachine : MonoBehaviour {
 	}
 
 	void OutOfFuel() {
-		if (playerMovement.enabled && !playerLand.LandingState && !playerLand.InLandingZone) {
+		if (playerMovement.enabled && !inSettlement) {
 			Land(true);
 			Invoke(nameof(RestartIfNotInLandingZoneAfterLanding), 3);
 		}
 	}
 
 	void RestartIfNotInLandingZoneAfterLanding() {
-		if (!playerLand.InLandingZone)
+		if (!inSettlement)
 			GameSceneManagement.Restart();
 	}
 }
