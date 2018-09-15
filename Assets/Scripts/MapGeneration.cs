@@ -20,21 +20,28 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] List<Color> colorsInMap;
 	[SerializeField] List<ColorTileDict> colorTileDict;
 	[SerializeField] List<GameObject> tilePrefabs;
+	[SerializeField] List<GameObject> tileChunks;
 	[SerializeField] Transform prefabParent;
 	[SerializeField] Vector3 prefabTileOffset;
 	[SerializeField] float rotationVariance;
+	[SerializeField] float positionVariance;
 	[SerializeField] bool generating;
 	[SerializeField] float waitTime;
 
 	void Update() {
 		if (generate) {
 			generating = true;
+			ClearOldChunks();
 			CreateDict();
 			Generate();
 			generate = false;
 		}
 
 		if (setup) Setup();
+	}
+
+	void ClearOldChunks() {
+		foreach (var go in tileChunks) Destroy(go);
 	}
 
 	void Setup() {
@@ -63,7 +70,7 @@ public class MapGeneration : MonoBehaviour {
 				                         Quaternion.identity, transform);
 				var thisTileMap = newMap.GetComponent<Tilemap>();
 				thisTileMap.size = tilemapChunkSize;
-				thisTileMap.transform.name = "tilemap: " + i + ", " + j;
+				newMap.name = "tilemap: " + i + ", " + j;
 				for (var k = 0; k < chunkWidth; k++){
 					for (var l = 0; l < chunkHeight; l++) {
 						var tile = GetTileFromMap(k + i * chunkWidth, l + j * chunkHeight);
@@ -71,17 +78,21 @@ public class MapGeneration : MonoBehaviour {
 						var position = new Vector3Int(k, l, 1);
 						thisTileMap.SetTile(position, tile);
 						thisTileMap.RefreshTile(position);
-						//if (tile == tiles[0] || tile == tiles[1]) CreateTree(i, j, 0);
+						if (tile == tiles[0] || tile == tiles[1] || tile==tiles[2]) CreateTree(i, j, 0, newMap.transform);
 						//if (tile == tiles[2]) CreateTree(i, j, 1);
 					}
+				}
+
+				tileChunks.Add(newMap);
 			}
-		}
 		generating = false;
 	}
 
-	void CreateTree(int i, int j, int treeType) {
-		var thisPrefab = Instantiate(tilePrefabs[treeType], prefabParent);
-		thisPrefab.transform.position = new Vector3(i, j, 0) + prefabTileOffset;
+	void CreateTree(int i, int j, int treeType, Transform parent) {
+		var thisPrefab = Instantiate(tilePrefabs[treeType], parent);
+		thisPrefab.transform.position = new Vector3(i + UnityEngine.Random.Range(-positionVariance, positionVariance),
+		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
+		                                            0) + prefabTileOffset;
 		thisPrefab.transform.rotation = Quaternion.Euler
 			(UnityEngine.Random.Range(-rotationVariance, rotationVariance),
 			 UnityEngine.Random.Range(-rotationVariance, rotationVariance),
