@@ -11,8 +11,9 @@ public class Ship : MonoBehaviour {
 
 	[SerializeField] public string shipName;
 	[Range(10,100)] [SerializeField] public int capacity;
-	[Range(.05f,1f)] [SerializeField] public float fuelDepletionRate;
+	[Range(1f,20f)] [SerializeField] public float fuelDepletionRate;
 	[Range(25,100)] [SerializeField] public int speed;
+	[SerializeField] public float boostCost;
 	[SerializeField] public int cost;
 
 	void OnEnable() => shipSpriteRenderer = GetComponent<SpriteRenderer>();

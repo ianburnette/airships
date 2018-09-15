@@ -19,7 +19,7 @@ public class PlayerInventory : MonoBehaviour {
         if (currentShip == null)
             currentShip = transform.GetChild(0).GetComponent<Ship>();
         SetupInventory();
-        CalculateInventory();
+        CalculateInventory(currentShip);
         PlayerLand.OnLandingAtSettlement += RemoveItemsFromInventory; //TODO this isn't final behavior
         PlayerShip.OnShipChanged += CalculateInventory;
     }
@@ -33,8 +33,8 @@ public class PlayerInventory : MonoBehaviour {
         }
     }
 
-    void CalculateInventory() {
-        for (var i = 0; i < currentShip.capacity; i++)
+    void CalculateInventory(Ship newShip) {
+        for (var i = 0; i < newShip.capacity; i++)
             inventorySlots[i].gameObject.SetActive(true);
     }
 

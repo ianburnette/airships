@@ -13,7 +13,7 @@ public class PlayerShip : MonoBehaviour {
     public delegate void ShipAnimatorChanged(Animator anim);
     public static event ShipAnimatorChanged OnShipAnimatorChanged;
 
-    public delegate void ShipChanged();
+    public delegate void ShipChanged(Ship newShip);
     public static event ShipChanged OnShipChanged;
 
     void Start() => staticPlayerShip = this;
@@ -28,6 +28,6 @@ public class PlayerShip : MonoBehaviour {
         currentShip.gameObject.layer = LayerMask.NameToLayer("PlayerShip");
         currentShip.transform.parent = transform;
         OnShipAnimatorChanged?.Invoke(newShip.GetComponent<Animator>());
-        OnShipChanged?.Invoke();
+        OnShipChanged?.Invoke(newShip);
     }
 }

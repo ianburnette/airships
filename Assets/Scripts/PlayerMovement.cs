@@ -52,6 +52,11 @@ public class PlayerMovement : MonoBehaviour {
       //  DebugRays();
     }
 
+    void FixedUpdate() {
+        currentInputEvaluation = EvaluateInput(CastRays(GetRays(mostRecentInput)));
+        ApplyMovement(mostRecentInput);
+    }
+
     void FaceInputDirection() {
         transform.rotation = SmoothedRotation
             (Quaternion.AngleAxis(MovementAngle(mostRecentInput) + angleOffset, up));
@@ -64,13 +69,12 @@ public class PlayerMovement : MonoBehaviour {
 
     void ProcessMovementInput(Vector2 input) {
         //DEBUG
-        currentInputEvaluation = EvaluateInput(CastRays(GetRays(input)));
         //END DEBUG
         //if (input!=Vector2.zero)
         //    TestInput (input.normalized);
         mostRecentInput = input != Vector2.zero ? input : mostRecentInput;
-        ApplyMovement(input);
     }
+
 
     void TestInput(Vector2 currentInput) {
         distances = CastRays(GetRays(currentInput));

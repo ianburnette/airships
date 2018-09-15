@@ -15,10 +15,11 @@ public class SettlementCanvas : MonoBehaviour {
     [SerializeField] TMP_Text titleIntro;
     [SerializeField] TMP_Text title;
     [SerializeField] TMP_Text description;
+    [SerializeField] TMP_Text[] buttons;
     [SerializeField] GameObject tradeButton;
-    [SerializeField] RectTransform cursor;
+    [SerializeField] RectTransform selectionCursor, arrow;
 
-    [SerializeField] List<ShipInfoPanel> shipInfoPanels;
+    [SerializeField] List<TMP_Text> shipInfoPanels;
 
     [SerializeField] Animator anim;
     [SerializeField] List<Ship> ships;
@@ -31,50 +32,154 @@ public class SettlementCanvas : MonoBehaviour {
     [SerializeField] SettlementCanvasState currentState = SettlementCanvasState.Home;
     Dictionary<SettlementCanvasState, string> stateAnimation = new Dictionary<SettlementCanvasState, string>() {
         { SettlementCanvasState.Home, "ShowHome" },
-        { SettlementCanvasState.Talk, "ShowTalk" },
         { SettlementCanvasState.Trade, "ShowTrade" },
         { SettlementCanvasState.TradeConfirm, "ShowTradeConfirm" },
     };
     [SerializeField] List<GameObject> firstSelectedButtons;
+    [SerializeField] int currentlySelectedButtonIndex;
+    [SerializeField] float arrowSpeed;
+    [SerializeField] float inputThreshold = .5f;
+
+    void OnEnable() {
+        PlayerInput.OnMovement += MoveCursor;
+        PlayerInput.OnInteract += Interact;
+    }
+
+    void OnDisable() {
+        PlayerInput.OnMovement -= MoveCursor;
+        PlayerInput.OnInteract -= Interact;
+    }
+
+    void MoveCursor(Vector2 input) {
+        if (input.y > inputThreshold)
+            AttemptButtonChange(true);
+        else if (input.y < -inputThreshold)
+            AttemptButtonChange(false);
+    }
+
+    void AttemptButtonChange(bool state) {
+        if (state) {
+            for (var i = currentlySelectedButtonIndex; i < buttons.Length; i++) {
+                if (!buttons[i].gameObject.activeSelf) continue;
+                currentlySelectedButtonIndex = i;
+                break;
+            }
+        } else {
+            for (var i = currentlySelectedButtonIndex; i > 0; i--) {
+                if (!buttons[i].gameObject.activeSelf) continue;
+                currentlySelectedButtonIndex = i;
+                break;
+            }
+        }
+    }
+
+    void Interact() {
+        switch (currentState) {
+        case SettlementCanvasState.Home:
+            switch (currentlySelectedButtonIndex) {
+            case 0:
+                SetSettlementCanvasState(SettlementCanvasState.Trade);
+                break;
+            case 3:
+                CloseCanvas();
+                break;
+            }
+            break;
+        case SettlementCanvasState.Trade:
+            switch (currentlySelectedButtonIndex) {
+            case 0:
+                SetSettlementCanvasState(SettlementCanvasState.TradeConfirm);
+                break;
+            case 1:
+                SetSettlementCanvasState(SettlementCanvasState.TradeConfirm);
+                break;
+            case 2:
+                SetSettlementCanvasState(SettlementCanvasState.TradeConfirm);
+                break;
+            case 3:
+                SetSettlementCanvasState(SettlementCanvasState.Home);
+                break;
+            }
+            break;
+        case SettlementCanvasState.TradeConfirm:
+            switch (currentlySelectedButtonIndex) {
+            case 0:
+                CompleteTrade(ships[0]);
+                CloseCanvas();
+                break;
+            case 1:
+                CompleteTrade(ships[2]);
+                CloseCanvas();
+                break;
+            case 2:
+                CompleteTrade(ships[3]);
+                CloseCanvas();
+                break;
+            case 3:
+                SetSettlementCanvasState(SettlementCanvasState.Trade);
+                break;
+            }
+            break;
+        }
+    }
 
     void Start() {
         staticSettlementCanvas = this;
         currentState = SettlementCanvasState.Home;
-        eventSystem.SetSelectedGameObject(firstSelectedButtons[(int)currentState]);
     }
 
-    public void SetSettlementCanvasState(int newStateInt) =>
-        SetSettlementCanvasState((SettlementCanvasState)newStateInt, currentState);
+    void Update() {
+        arrow.position = Vector2.Lerp(arrow.position,
+                                      new Vector2(arrow.position.x,
+                                                  buttons[currentlySelectedButtonIndex].transform.position.y),
+                                      arrowSpeed * Time.deltaTime);
+    }
 
-    public void SetSettlementCanvasState(SettlementCanvasState newState, SettlementCanvasState prevState) {
+    public void OpenCanvas(Settlement settlement,
+                           SettlementInfo info,
+                           List<Ship> shipsFromThisSettlement,
+                           Transform player) {
+        currentSettlement = settlement;
+        StaticCamera.instance.NewTarget(settlement.transform);
+        currentlySelectedTransform = player;
+        SetInfo(info);
+        ships = shipsFromThisSettlement;
+        SetTradeButtonStateDependingOnShipCount();
+        currentlySelectedButtonIndex = buttons[0].gameObject.activeSelf ? 0 : 3;
+        ShowCanvas(true);
+    }
+
+    public void SetSettlementCanvasState(SettlementCanvasState newState) {
         currentState = newState;
         switch (currentState) {
             case (SettlementCanvasState.Home):
-                SetTradeButtonStateDependingOnShipCount();
+                // TODO
+                //SetTradeButtonStateDependingOnShipCount();
                 break;
             case (SettlementCanvasState.Trade):
-                PopulateShipButtonInfo();
+                //PopulateShipButtonInfo();
+                break;
+            case (SettlementCanvasState.TradeConfirm):
+
                 break;
         }
-        anim.SetBool(stateAnimation[prevState], false);
-        anim.SetBool(stateAnimation[currentState], true);
-        eventSystem.SetSelectedGameObject(firstSelectedButtons[(int)currentState]);
     }
 
     void PopulateShipButtonInfo() {
-        for (var i = 0; i < ships.Count; i++) PopulateShipButton(shipInfoPanels[i], ships[i]);
-        if (shipInfoPanels.Count>ships.Count)
-            for (var i = ships.Count; i < shipInfoPanels.Count; i++)
-                shipInfoPanels[i].panel.SetActive(false);
+        for (var i = 0; i < ships.Count; i++) PopulateShipButton(buttons[i], ships[i]);
+        if (buttons.Length-1 > ships.Count)
+            for (var i = ships.Count; i < buttons.Length - 1; i++)
+                buttons[i].gameObject.SetActive(false);
     }
 
-    void PopulateShipButton(ShipInfoPanel shipInfoPanel, Ship ship) {
-        shipInfoPanel.panel.SetActive(true);
-        shipInfoPanel.nameText.text = ship.shipName;
-        shipInfoPanel.capacityText.text = ship.capacity.ToString();
-        shipInfoPanel.fuelText.text = ship.fuelDepletionRate.ToString();
-        shipInfoPanel.speedText.text = ship.speed.ToString();
-        shipInfoPanel.costText.text = ship.cost.ToString();
+    void PopulateShipButton(TMP_Text buttonForShipInfo, Ship ship) {
+        buttonForShipInfo.gameObject.SetActive(true);
+        buttonForShipInfo.text = "<b>" + ship.shipName + "</b>";
+        buttonForShipInfo.text += "/n Capacity: " + ship.capacity;
+        buttonForShipInfo.text += "/n Fuel Efficiency: " + ship.fuelDepletionRate;
+        buttonForShipInfo.text += "/n Handling: " + ship.speed;
+        buttonForShipInfo.text += "/n Boost Fuel Cost:" + ship.boostCost;
+        buttonForShipInfo.text += "/n Trade Cost:" + ship.cost;
     }
 
     public void SetInfo(SettlementInfo info) {
@@ -83,40 +188,22 @@ public class SettlementCanvas : MonoBehaviour {
         description.text = info.description;
     }
 
-    public void OpenCanvas(Settlement settlement, SettlementInfo info, List<Ship> ships, Transform player) {
-        currentSettlement = settlement;
-        CameraFollow.cam.Target = settlement.transform;
-        currentlySelectedTransform = player;
-        SetInfo(info);
-        this.ships = ships;
-        SetTradeButtonStateDependingOnShipCount();
-        ShowCanvas(true);
-    }
-
-    void SetTradeButtonStateDependingOnShipCount() {
-        tradeButton.SetActive(this.ships.Count > 0);
-    }
+    void SetTradeButtonStateDependingOnShipCount() => buttons[0].gameObject.SetActive(ships.Count > 0);
 
     public void CloseCanvas() {
-        CameraFollow.cam.Target = currentlySelectedTransform;
+        StaticCamera.instance.NewTarget(currentlySelectedTransform);
         currentState = 0;
         ShowCanvas(false);
     }
 
-    public void StartTrade(int shipIndex) {
-        currentlySelectedShip = ships[shipIndex];
-        SetSettlementCanvasState(SettlementCanvasState.TradeConfirm, currentState);
-    }
-
-    public void CompleteTrade() {
-        PlayerShip.staticPlayerShip.NewShip(currentlySelectedShip);
-        currentlySelectedTransform = currentlySelectedShip.transform;
-        SetSettlementCanvasState(SettlementCanvasState.Home, currentState);
+    public void CompleteTrade(Ship newShip) {
+        PlayerShip.staticPlayerShip.NewShip(newShip);
+        currentlySelectedTransform = newShip.transform;
         currentSettlement.RefreshHanger();
     }
 
     void ShowCanvas(bool state) {
-        anim.SetBool("ShowHome", state);
+        anim.SetBool("ShowHome", true);
         anim.SetBool("ShowSettlementPanel", state);
     }
 
@@ -125,9 +212,8 @@ public class SettlementCanvas : MonoBehaviour {
 [Serializable]
 public enum SettlementCanvasState {
     Home = 0,
-    Talk = 1,
-    Trade = 2,
-    TradeConfirm = 3
+    Trade = 1,
+    TradeConfirm = 2
 }
 
 [Serializable]
@@ -138,8 +224,3 @@ public class SettlementInfo {
     public List<string> dialogue;
 }
 
-[Serializable]
-public class ShipInfoPanel {
-    public GameObject panel;
-    public TMP_Text nameText, capacityText, fuelText, speedText, costText;
-}

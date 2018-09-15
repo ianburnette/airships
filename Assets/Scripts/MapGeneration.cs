@@ -9,7 +9,7 @@ using UnityEngine.Tilemaps;
 [ExecuteInEditMode]
 public class MapGeneration : MonoBehaviour {
 
-	public bool generate, setup;
+	public bool generate, setup, includePrefabs;
 
 	[SerializeField] Texture2D mapTexture;
 	[SerializeField] Tilemap tilemap;
@@ -27,6 +27,9 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] float positionVariance;
 	[SerializeField] bool generating;
 	[SerializeField] float waitTime;
+	[SerializeField] int settlementIndex;
+	[SerializeField] int groundIndex;
+
 
 	void Update() {
 		if (generate) {
@@ -41,7 +44,7 @@ public class MapGeneration : MonoBehaviour {
 	}
 
 	void ClearOldChunks() {
-		foreach (var go in tileChunks) Destroy(go);
+		foreach (var go in tileChunks) DestroyImmediate(go);
 	}
 
 	void Setup() {
@@ -71,6 +74,7 @@ public class MapGeneration : MonoBehaviour {
 				var thisTileMap = newMap.GetComponent<Tilemap>();
 				thisTileMap.size = tilemapChunkSize;
 				newMap.name = "tilemap: " + i + ", " + j;
+				var tilemapCulling = newMap.GetComponent<Culling>();
 				for (var k = 0; k < chunkWidth; k++){
 					for (var l = 0; l < chunkHeight; l++) {
 						var tile = GetTileFromMap(k + i * chunkWidth, l + j * chunkHeight);
@@ -78,17 +82,21 @@ public class MapGeneration : MonoBehaviour {
 						var position = new Vector3Int(k, l, 1);
 						thisTileMap.SetTile(position, tile);
 						thisTileMap.RefreshTile(position);
-						if (tile == tiles[0] || tile == tiles[1] || tile==tiles[2]) CreateTree(i, j, 0, newMap.transform);
+						if (tile != tiles[groundIndex] && tile != tiles[settlementIndex] && includePrefabs) {
+							CreateTree(k + i * chunkWidth, l + j * chunkHeight, 0, newMap.transform, tilemapCulling);
+						}
 						//if (tile == tiles[2]) CreateTree(i, j, 1);
+
 					}
 				}
 
+				tilemapCulling.CullImmediate(true);
 				tileChunks.Add(newMap);
 			}
 		generating = false;
 	}
 
-	void CreateTree(int i, int j, int treeType, Transform parent) {
+	void CreateTree(int i, int j, int treeType, Transform parent, Culling tilemapCulling) {
 		var thisPrefab = Instantiate(tilePrefabs[treeType], parent);
 		thisPrefab.transform.position = new Vector3(i + UnityEngine.Random.Range(-positionVariance, positionVariance),
 		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
@@ -97,6 +105,8 @@ public class MapGeneration : MonoBehaviour {
 			(UnityEngine.Random.Range(-rotationVariance, rotationVariance),
 			 UnityEngine.Random.Range(-rotationVariance, rotationVariance),
 			 UnityEngine.Random.Range(-360,360));
+
+		thisPrefab.SetActive(false);
 	}
 
 	TileBase GetTileFromMap(int i, int j) =>
