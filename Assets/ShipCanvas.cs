@@ -13,8 +13,13 @@ public class ShipCanvas : MonoBehaviour {
     [SerializeField] List<Slider> stats;
     [SerializeField] TMP_Text title, cost;
 
+    [SerializeField] Animator anim;
+
     public bool activated, confirming;
     public Ship currentShip;
+
+    public delegate void ShipPurchase(Ship newShip);
+    public static event ShipPurchase OnShipPurchase;
 
     void OnEnable() {
         instance = this;
@@ -26,14 +31,17 @@ public class ShipCanvas : MonoBehaviour {
     }
 
     void Interact() {
-        if (activated && !confirming)
+        if (activated && !confirming) {
             confirming = true;
+            anim.SetBool("pending", true);
+        }
         else if (activated && confirming)
             Purchase();
     }
 
     public void Activate(bool state, [CanBeNull] Ship ship) {
         activated = state;
+        anim.SetBool("pending", false);
         if (state) {
             title.text = ship.name;
             stats[0].value = ship.fuelEfficiency;
@@ -56,8 +64,8 @@ public class ShipCanvas : MonoBehaviour {
     }
 
     void Purchase() {
-        if (currentShip != null)
-            PlayerShip.staticPlayerShip.NewShip(currentShip);
+        if (currentShip != null) OnShipPurchase(currentShip);
+        anim.SetBool("pending", false);
         canvas.enabled = false;
     }
 }

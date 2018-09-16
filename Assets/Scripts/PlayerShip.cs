@@ -16,6 +16,14 @@ public class PlayerShip : MonoBehaviour {
     public delegate void ShipChanged(Ship newShip);
     public static event ShipChanged OnShipChanged;
 
+    void OnEnable() {
+        ShipCanvas.OnShipPurchase += NewShip;
+    }
+
+    void OnDisable() {
+        ShipCanvas.OnShipPurchase -= NewShip;
+    }
+
     void Start() => staticPlayerShip = this;
 
     public void NewShip(Ship newShip) {

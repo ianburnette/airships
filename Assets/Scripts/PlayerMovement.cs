@@ -3,16 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using ProBuilder2.Common;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayerMovement : MonoBehaviour {
 
     [SerializeField] Rigidbody2D rigidbody2D;
     [SerializeField] float speed;
+    [SerializeField] float baseSpeed;
     [SerializeField] Transform transform;
     [SerializeField] Vector3 up;
     [SerializeField] float angleOffset;
     [SerializeField] float rotationThresholdVelocity;
     [SerializeField] float angleSmoothSpeed;
+    Ship currentShip;
+
+    [Header("Boost")]
+    [FormerlySerializedAs("boost")] [SerializeField] bool boosting;
+    [SerializeField] bool canBoost;
+    [SerializeField] TrailRenderer boostTrail;
+    [SerializeField] float boostEfficiency;
+    [SerializeField] float boostSpeed;
+    [SerializeField] float resetTime = 2f;
 
     [Header("Movement Sanitation")]
     [SerializeField] Vector2 rayOffset;
@@ -31,16 +42,60 @@ public class PlayerMovement : MonoBehaviour {
     public delegate void Move(float var);
     public static event Move OnMove;
 
+    public delegate void BoostDelegate(float boostCost);
+    public static event BoostDelegate OnBoost;
+    public delegate void BoostStopDelegate();
+    public static event BoostStopDelegate OnBoostStop;
+
     void OnEnable() {
         PlayerInput.OnMovement += ProcessMovementInput;
+        PlayerInput.OnInteract += Boost;
+        PlayerInput.OnInteractEnd += StopBoost;
         PlayerLand.OnLandingStateChange += ToggleMovement;
+        ShipCanvas.OnShipPurchase += SetupBoost;
+        Settlement.OnEnterSettlement += DisableBoost;
+        Settlement.OnExitSettlement += EnableBoost;
+
+        currentShip = transform.GetChild(0).GetComponent<Ship>();
+        SetupBoost(currentShip);
     }
 
     void OnDisable() {
         PlayerInput.OnMovement -= ProcessMovementInput;
+        PlayerInput.OnInteract -= Boost;
+        PlayerInput.OnInteractEnd -= StopBoost;
         PlayerLand.OnLandingStateChange -= ToggleMovement;
+        ShipCanvas.OnShipPurchase -= SetupBoost;
+        Settlement.OnEnterSettlement -= DisableBoost;
+        Settlement.OnExitSettlement -= EnableBoost;
     }
 
+    void SetupBoost(Ship newship) {
+        currentShip = newship;
+        boostTrail = currentShip.transform.GetChild(1).GetChild(2).GetComponent<TrailRenderer>();
+        boostEfficiency = currentShip.boostEfficiency;
+    }
+
+    void EnableBoost() => canBoost = true;
+    void DisableBoost() => canBoost = false;
+
+    void Boost() {
+        boosting = true;
+        boostTrail.emitting = true;
+        OnBoost(currentShip.boostEfficiency);
+        speed = boostSpeed;
+    }
+
+    void StopBoost() {
+        boosting = false;
+        canBoost = false;
+        OnBoostStop?.Invoke();
+        Invoke(nameof(ResetBoost), resetTime);
+        boostTrail.emitting = false;
+        speed = baseSpeed;
+    }
+
+    void ResetBoost() => canBoost = true;
 
     void Start() {
         previousFramePosition = transform.position;

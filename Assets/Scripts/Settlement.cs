@@ -16,13 +16,13 @@ public class Settlement : MonoBehaviour {
     void OnTriggerEnter2D(Collider2D other) {
         if (other.gameObject.layer != playerLayer) return;
         playerFuel = other.GetComponent<PlayerFuel>();
-        OnEnterSettlement();
+        OnEnterSettlement?.Invoke();
     }
 
     void OnTriggerExit2D(Collider2D other) {
         if (other.gameObject.layer != playerLayer) return;
         playerFuel = null;
-        OnExitSettlement();
+        OnExitSettlement?.Invoke();
     }
 
     void OnTriggerStay2D(Collider2D other) {
