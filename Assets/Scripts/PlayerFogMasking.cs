@@ -4,7 +4,6 @@ using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[ExecuteInEditMode]
 public class PlayerFogMasking : MonoBehaviour {
 
     [SerializeField] Texture2D fogTexture;

@@ -36,8 +36,9 @@ public class PlayerMovement : MonoBehaviour {
     Vector2 previousFramePosition;
     public Vector2 origin;
 
-    public Vector2 mostRecentInput;
+    [FormerlySerializedAs("mostRecentInput")] public Vector2 currentInput;
     [SerializeField] int degreesPerInputMutation = 5;
+    [SerializeField] Vector2 mostRecentInput;
 
     public delegate void Move(float var);
     public static event Move OnMove;
@@ -82,7 +83,7 @@ public class PlayerMovement : MonoBehaviour {
     void Boost() {
         boosting = true;
         boostTrail.emitting = true;
-        OnBoost(currentShip.boostEfficiency);
+        OnBoost?.Invoke(currentShip.boostEfficiency);
         speed = boostSpeed;
     }
 
@@ -108,12 +109,13 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        currentInputEvaluation = EvaluateInput(CastRays(GetRays(mostRecentInput)));
-        ApplyMovement(mostRecentInput);
+        currentInputEvaluation = EvaluateInput(CastRays(GetRays(currentInput)));
+        ApplyMovement(currentInput);
     }
 
     void FaceInputDirection() {
         transform.rotation = SmoothedRotation
+
             (Quaternion.AngleAxis(MovementAngle(mostRecentInput) + angleOffset, up));
     }
 
@@ -123,13 +125,20 @@ public class PlayerMovement : MonoBehaviour {
     float MovementAngle(Vector2 dir) => Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
     void ProcessMovementInput(Vector2 input) {
+        if (boosting) {
+            currentInput = input == Vector2.zero ? currentInput : MaxedInput(input);
+            mostRecentInput = currentInput;
+        } else {
+            currentInput = input.normalized; //;
+            mostRecentInput = currentInput != Vector2.zero ? currentInput : mostRecentInput;
+        }
         //DEBUG
         //END DEBUG
         //if (input!=Vector2.zero)
         //    TestInput (input.normalized);
-        mostRecentInput = input != Vector2.zero ? input : mostRecentInput;
     }
 
+    Vector2 MaxedInput(Vector2 input) => (input * 20f).normalized;
 
     void TestInput(Vector2 currentInput) {
         distances = CastRays(GetRays(currentInput));
