@@ -128,8 +128,10 @@ MonoBehaviour:
   distanceSimilarityMargin: 0
   currentInputEvaluation: 0
   origin: {x: 0, y: 0}
-  mostRecentInput: {x: 0, y: 0}
+  currentInput: {x: 0, y: 0}
   degreesPerInputMutation: 5
+  mostRecentInput: {x: 0, y: 0}
+  inSettlement: 0
 --- !u!114 &114673136245200570
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -196,7 +198,7 @@ MonoBehaviour:
   currentShip: {fileID: 0}
   timeBeforeAdding: 0.5
   timeAfterLeaving: 2
-  totalCollectibles: 200
+  totalCollectibles: 0
   totalText: {fileID: 0}
   collectibleRepresentation: {fileID: 3467573658374728505, guid: eb965aeb917554ec897c522ebd70538c, type: 3}
   representationAnimDuration: 1
@@ -231,6 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea478bca99f154a8792d62f9eabbcf14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  resetFog: 1
   fogTexture: {fileID: 2800000, guid: cf11b1c6c740141f2beb8e7cb3d9dbc3, type: 3}
   renderTexture: {fileID: 8600000, guid: c498a5ac4a54247e1acc0e074afe3f21, type: 2}
   mat: {fileID: 2100000, guid: b00a075cbc75344cdadae8a5e8f74824, type: 2}
@@ -1339,7 +1342,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1355752927659770917, guid: 54f99641018b64ae0b06f4b18eceee1c, type: 3}
       propertyPath: capacity
-      value: 0.1
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 1583603494362106758, guid: 54f99641018b64ae0b06f4b18eceee1c, type: 3}
       propertyPath: m_Layer

@@ -38,6 +38,7 @@ public class PlayerShip : MonoBehaviour {
         transform.rotation = currentShip.transform.rotation;
         currentShip.gameObject.layer = LayerMask.NameToLayer("PlayerShip");
         currentShip.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer("PlayerShip");
+        currentShip.GetComponent<CircleCollider2D>().enabled = false;
         currentShip.transform.parent = transform;
         currentShip.playerShip = true;
 

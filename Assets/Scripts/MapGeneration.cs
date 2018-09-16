@@ -22,6 +22,8 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] List<GameObject> tilePrefabs;
 	[SerializeField] List<GameObject> tileChunks;
 	[SerializeField] Transform prefabParent;
+	[SerializeField] GameObject pickup;
+	[SerializeField] int pickupIndex;
 	[SerializeField] Vector3 prefabTileOffset;
 	[SerializeField] float rotationVariance;
 	[SerializeField] float positionVariance;
@@ -85,6 +87,10 @@ public class MapGeneration : MonoBehaviour {
 						if (tile != tiles[groundIndex] && tile != tiles[settlementIndex] && includePrefabs) {
 							CreateTree(k + i * chunkWidth, l + j * chunkHeight, 0, newMap.transform, tilemapCulling);
 						}
+
+						if (tile == tiles[pickupIndex]) {
+							CreatePickup(k + i * chunkWidth, l + j * chunkHeight, newMap.transform);
+						}
 						//if (tile == tiles[2]) CreateTree(i, j, 1);
 
 					}
@@ -96,21 +102,31 @@ public class MapGeneration : MonoBehaviour {
 		generating = false;
 	}
 
+	void CreatePickup(int i, int j, Transform parent) {
+		var thisPickup = Instantiate(pickup, parent);
+		PlacePrefab(i, j, thisPickup);
+	}
+
 	void CreateTree(int i, int j, int treeType, Transform parent, Culling tilemapCulling) {
 		var thisPrefab = Instantiate(tilePrefabs[treeType], parent);
-		thisPrefab.transform.position = new Vector3(i + UnityEngine.Random.Range(-positionVariance, positionVariance),
-		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
-		                                            0) + prefabTileOffset;
-		thisPrefab.transform.rotation = Quaternion.Euler
-			(UnityEngine.Random.Range(-rotationVariance, rotationVariance),
-			 UnityEngine.Random.Range(-rotationVariance, rotationVariance),
-			 UnityEngine.Random.Range(-360,360));
-
+		PlacePrefab(i, j, thisPrefab);
+		RotatePrefab(thisPrefab);
 		thisPrefab.SetActive(false);
 	}
 
-	TileBase GetTileFromMap(int i, int j) =>
-		colorTileDict.First(c => c.color == mapTexture.GetPixel(i, j)).tile;
+	void RotatePrefab(GameObject thisPrefab) {
+		thisPrefab.transform.rotation = Quaternion.Euler
+			(UnityEngine.Random.Range(-rotationVariance, rotationVariance),
+			 UnityEngine.Random.Range(-rotationVariance, rotationVariance),
+			 UnityEngine.Random.Range(-360, 360));
+	}
+
+	void PlacePrefab(int i, int j, GameObject thisPrefab) =>
+		thisPrefab.transform.position = new Vector3(i + UnityEngine.Random.Range(-positionVariance, positionVariance),
+		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
+	                                                                                                     0) +
+		                                prefabTileOffset;
+	TileBase GetTileFromMap(int i, int j) => (colorTileDict.First(c => c.color == mapTexture.GetPixel(i, j)).tile);
 }
 
 [Serializable]

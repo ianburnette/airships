@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 412922182265996681}
   - component: {fileID: 1355752927659770917}
   - component: {fileID: 5172508555271702093}
+  - component: {fileID: 6208292561228275776}
   m_Layer: 11
   m_Name: Ship
   m_TagString: Untagged
@@ -124,6 +125,22 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!58 &6208292561228275776
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1527769380307048}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 2
 --- !u!1 &1583603494362106758
 GameObject:
   m_ObjectHideFlags: 0

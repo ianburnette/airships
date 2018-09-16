@@ -39,6 +39,7 @@ public class PlayerMovement : MonoBehaviour {
     [FormerlySerializedAs("mostRecentInput")] public Vector2 currentInput;
     [SerializeField] int degreesPerInputMutation = 5;
     [SerializeField] Vector2 mostRecentInput;
+    [SerializeField] bool inSettlement;
 
     public delegate void Move(float var);
     public static event Move OnMove;
@@ -54,8 +55,8 @@ public class PlayerMovement : MonoBehaviour {
         PlayerInput.OnInteractEnd += StopBoost;
         PlayerLand.OnLandingStateChange += ToggleMovement;
         ShipCanvas.OnShipPurchase += SetupBoost;
-        Settlement.OnEnterSettlement += DisableBoost;
-        Settlement.OnExitSettlement += EnableBoost;
+        Settlement.OnEnterSettlement += EnterSettlement;
+        Settlement.OnExitSettlement += ExitSettlement;
 
         currentShip = transform.GetChild(0).GetComponent<Ship>();
         SetupBoost(currentShip);
@@ -67,8 +68,8 @@ public class PlayerMovement : MonoBehaviour {
         PlayerInput.OnInteractEnd -= StopBoost;
         PlayerLand.OnLandingStateChange -= ToggleMovement;
         ShipCanvas.OnShipPurchase -= SetupBoost;
-        Settlement.OnEnterSettlement -= DisableBoost;
-        Settlement.OnExitSettlement -= EnableBoost;
+        Settlement.OnEnterSettlement -= EnterSettlement;
+        Settlement.OnExitSettlement -= ExitSettlement;
     }
 
     void SetupBoost(Ship newship) {
@@ -77,26 +78,40 @@ public class PlayerMovement : MonoBehaviour {
         boostEfficiency = currentShip.boostEfficiency;
     }
 
-    void EnableBoost() => canBoost = true;
-    void DisableBoost() => canBoost = false;
+    void ExitSettlement() {
+        inSettlement = false;
+        canBoost = true;
+    }
+
+    void EnterSettlement() {
+        inSettlement = true;
+        canBoost = false;
+    }
 
     void Boost() {
-        boosting = true;
-        boostTrail.emitting = true;
-        OnBoost?.Invoke(currentShip.boostEfficiency);
-        speed = boostSpeed;
+        if (canBoost) {
+            boosting = true;
+            boostTrail.emitting = true;
+            OnBoost?.Invoke(currentShip.boostEfficiency);
+            speed = boostSpeed;
+        }
     }
 
     void StopBoost() {
-        boosting = false;
-        canBoost = false;
-        OnBoostStop?.Invoke();
-        Invoke(nameof(ResetBoost), resetTime);
-        boostTrail.emitting = false;
-        speed = baseSpeed;
+        if (boosting) {
+            boosting = false;
+            canBoost = false;
+            OnBoostStop?.Invoke();
+            Invoke(nameof(ResetBoost), resetTime);
+            boostTrail.emitting = false;
+            speed = baseSpeed;
+        }
     }
 
-    void ResetBoost() => canBoost = true;
+    void ResetBoost() {
+        if (!inSettlement)
+            canBoost = true;
+    }
 
     void Start() {
         previousFramePosition = transform.position;

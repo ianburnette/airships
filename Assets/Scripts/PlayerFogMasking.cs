@@ -6,6 +6,8 @@ using UnityEngine.Serialization;
 
 public class PlayerFogMasking : MonoBehaviour {
 
+    public bool resetFog;
+
     [SerializeField] Texture2D fogTexture;
 
     [SerializeField] RenderTexture renderTexture;
@@ -43,6 +45,8 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     void Update() {
+        if (resetFog)
+            ResetFog();
         SetupTextureInput();
         var hit = GetHit();
         if (hit.transform == null) {
@@ -66,6 +70,16 @@ public class PlayerFogMasking : MonoBehaviour {
         GL.PopMatrix();
         RenderTexture.active = null;
         Graphics.SetRenderTarget(null);*/
+    }
+
+    void ResetFog() {
+        SetupTextureInput();
+        var cols = new Color[fogTexture.width * fogTexture.height];
+        for (var i = 0; i<cols.Length; i++)
+            cols[i] = Color.white;
+        fogTexture.SetPixels(0, 0, fogTexture.width,fogTexture.height, cols);
+        WriteAndCloseTextureInput();
+        resetFog = false;
     }
 
     static void DebugFogHit(RaycastHit hit) {
@@ -133,7 +147,7 @@ public class PlayerFogMasking : MonoBehaviour {
 
     RaycastHit GetHit() {
         RaycastHit hit;
-        Debug.DrawRay(transform.position,transform.forward, Color.magenta);
+        Debug.DrawRay(transform.position - (transform.forward/3), transform.forward, Color.magenta);
         Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask);
         return hit;
     }
