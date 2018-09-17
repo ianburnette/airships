@@ -31,7 +31,7 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] float waitTime;
 	[SerializeField] int settlementIndex;
 	[SerializeField] int groundIndex;
-
+	[SerializeField] PlayerCulling playerCulling;
 
 	void Update() {
 		if (generate) {
@@ -69,8 +69,14 @@ public class MapGeneration : MonoBehaviour {
 	void Generate() {
 		var chunkWidth = tilemapChunkSize.x;
 		var chunkHeight = tilemapChunkSize.y;
-		for (var i = 0; i<mapTexture.width / chunkWidth; i++)
-			for (var j = 0; j < mapTexture.height / chunkHeight; j++) {
+
+		var gridWidth = mapTexture.width / chunkWidth;
+		var gridHeight = mapTexture.height / chunkHeight;
+		playerCulling.SetupMapGrid(gridWidth, gridHeight);
+
+
+		for (var i = 0; i<gridWidth; i++) {
+			for (var j = 0; j < gridHeight; j++) {
 				var newMap = Instantiate(tilemapPrefab, new Vector2(i * chunkWidth, j * chunkHeight),
 				                         Quaternion.identity, transform);
 				var thisTileMap = newMap.GetComponent<Tilemap>();
@@ -97,8 +103,12 @@ public class MapGeneration : MonoBehaviour {
 				}
 
 				tilemapCulling.CullImmediate(true);
+				tilemapCulling.coords = new Vector2Int(i, j);
+				playerCulling.NewMap(tilemapCulling, i, j);
 				tileChunks.Add(newMap);
 			}
+		}
+
 		generating = false;
 	}
 

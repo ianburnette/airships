@@ -6,6 +6,7 @@ using UnityEngine;
 public class Culling : MonoBehaviour {
     public GameObject[] prefabs;
     public bool cullState;
+    public Vector2Int coords;
 
     public void Cull(bool state) {
         StartCoroutine(CullCoroutine(state));
@@ -18,11 +19,11 @@ public class Culling : MonoBehaviour {
                 go.SetActive(state);
     }
 
-    IEnumerator CullCoroutine(bool state) {
-        cullState = state;
+    IEnumerator CullCoroutine(bool activeState) {
+        cullState = activeState;
         foreach (GameObject go in prefabs) {
             if (go != null)
-                go.SetActive(state);
+                go.SetActive(activeState);
             yield return new WaitForEndOfFrame();
         }
 
