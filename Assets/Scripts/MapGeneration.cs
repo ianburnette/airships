@@ -144,6 +144,7 @@ public class MapGeneration : MonoBehaviour {
 		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
 	                                                                                                     0) +
 		                                prefabTileOffset;
+
 	TileBase GetTileFromMap(int i, int j) => (colorTileDict.First(c => c.color == mapTexture.GetPixel(i, j)).tile);
 }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
+using DG.Tweening;
 
 public class StaticCamera : MonoBehaviour {
     public static StaticCamera instance;
@@ -38,6 +39,7 @@ public class StaticCamera : MonoBehaviour {
         transposer.m_YDamping = boostDamping.y;
         transposer.m_DeadZoneWidth = boostDeadZone.x;
         transposer.m_DeadZoneHeight = boostDeadZone.y;
+        //transposer.m_DeadZoneHeight =
     }
 
     void NormalCam() {
