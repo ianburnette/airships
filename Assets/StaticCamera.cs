@@ -9,6 +9,9 @@ public class StaticCamera : MonoBehaviour {
     public CinemachineFramingTransposer transposer;
 
     public float normalFollowSpeed, boostFollowSpeed;
+    public float normalLookaheadTime, boostLookaheadTime;
+    public Vector2 normalDamping, boostDamping;
+    public Vector2 normalDeadZone, boostDeadZone;
 
     void OnEnable() {
         PlayerMovement.OnBoost += BoostCam;
@@ -30,9 +33,19 @@ public class StaticCamera : MonoBehaviour {
 
     void BoostCam(float efficiency) {
         transposer.m_LookaheadSmoothing = boostFollowSpeed;
+        transposer.m_LookaheadTime = boostLookaheadTime;
+        transposer.m_XDamping = boostDamping.x;
+        transposer.m_YDamping = boostDamping.y;
+        transposer.m_DeadZoneWidth = boostDeadZone.x;
+        transposer.m_DeadZoneHeight = boostDeadZone.y;
     }
 
     void NormalCam() {
         transposer.m_LookaheadSmoothing = normalFollowSpeed;
+        transposer.m_LookaheadTime = normalLookaheadTime;
+        transposer.m_XDamping = normalDamping.x;
+        transposer.m_YDamping = normalDamping.y;
+        transposer.m_DeadZoneWidth = normalDeadZone.x;
+        transposer.m_DeadZoneHeight = normalDeadZone.y;
     }
 }

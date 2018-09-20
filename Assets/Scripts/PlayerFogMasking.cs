@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using UnityEngine;
@@ -27,6 +28,10 @@ public class PlayerFogMasking : MonoBehaviour {
 
     Color[] savedMap;
 
+    void Start() {
+
+    }
+
     void OnEnable() {
         //fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
         //fogTexture.width = renderTexture.width;
@@ -34,11 +39,11 @@ public class PlayerFogMasking : MonoBehaviour {
         //fogTexture.filterMode = FilterMode.Point;
         renderer.material.mainTexture = fogTexture;
         SetBrush();
-        Settlement.OnExitSettlement += SaveMap;
+        Settlement.OnExitSettlement += SaveMapTexture;
     }
 
     void OnDisable() {
-        Settlement.OnExitSettlement -= SaveMap;
+        Settlement.OnExitSettlement -= SaveMapTexture;
     }
 
     void SetBrush() {
@@ -56,6 +61,7 @@ public class PlayerFogMasking : MonoBehaviour {
             ResetFog();
         if (revertToSavedFog)
             RevertToSavedFog();
+
         SetupTextureInput();
         var hit = GetHit();
         if (hit.transform == null) {
@@ -99,7 +105,15 @@ public class PlayerFogMasking : MonoBehaviour {
     }
 
     void ApplyTextureFromSaved() {
-        fogTexture.SetPixels(0, 0, fogTexture.width, fogTexture.height, savedMap);
+        //fogTexture.SetPixels(0, 0, fogTexture.width, fogTexture.height, savedMap);
+        if (ES2.Exists("savedFogTexture.png")) {
+            fogTexture = ES2.LoadImage("savedFogTexture.png");
+            fogTexture.Apply();
+            renderer.material.mainTexture = fogTexture;
+            fogTexture.Apply();
+        }
+        else
+            print("No texture found");
     }
 
     void SetPixels(int row, Vector2 hitTextureCoord, List<Color> currentRow) {
@@ -123,12 +137,12 @@ public class PlayerFogMasking : MonoBehaviour {
 
     RaycastHit GetHit() {
         RaycastHit hit;
-        Debug.DrawRay(transform.position - (transform.forward/3), transform.forward, Color.magenta);
-        Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask);
+        Debug.DrawRay(transform.position - (transform.forward), transform.forward * castDist, Color.magenta);
+        Physics.Raycast(transform.position - (transform.forward * castDist), Vector3.forward, out hit, castDist, fogMask);
         return hit;
     }
 
-    void SaveMap() {
+    void SaveMapColorList() {
         var colorList = new Color[fogTexture.width * fogTexture.height];
         for (var column = 0; column < fogTexture.width; column++) {
             for (var row = 0; row < fogTexture.height; row++) {
@@ -137,6 +151,13 @@ public class PlayerFogMasking : MonoBehaviour {
         }
 
         savedMap = colorList;
+    }
+
+    void SaveMapTexture() {
+        //var tex = new UnityEngine.Texture2D(fogTexture.width, fogTexture.height);
+        //tex = fogTexture;
+        ES2.SaveImage(fogTexture, "savedFogTexture.png");
+
     }
 
     void RevertToSavedFog() {
