@@ -31,6 +31,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] LayerMask obstacleMask;
     [SerializeField] float[] distances;
     [SerializeField] float distanceSimilarityMargin;
+    public int testsThisFrame, maxTestsPerFrame;
 
     public InputEvaluation currentInputEvaluation;
     Vector2 previousFramePosition;
@@ -40,6 +41,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] int degreesPerInputMutation = 5;
     [SerializeField] Vector2 mostRecentInput;
     [SerializeField] bool inSettlement;
+    [SerializeField] float repelForce;
 
     public delegate void Move(float var);
     public static event Move OnMove;
@@ -50,7 +52,7 @@ public class PlayerMovement : MonoBehaviour {
     public static event BoostStopDelegate OnBoostStop;
 
     void OnEnable() {
-        PlayerInput.OnMovement += ProcessMovementInput;
+        PlayerInput.OnMovement += ReceiveMovementInput;
         PlayerInput.OnInteract += Boost;
         PlayerInput.OnInteractEnd += StopBoost;
         PlayerLand.OnLandingStateChange += ToggleMovement;
@@ -63,7 +65,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void OnDisable() {
-        PlayerInput.OnMovement -= ProcessMovementInput;
+        PlayerInput.OnMovement -= ReceiveMovementInput;
         PlayerInput.OnInteract -= Boost;
         PlayerInput.OnInteractEnd -= StopBoost;
         PlayerLand.OnLandingStateChange -= ToggleMovement;
@@ -122,19 +124,24 @@ public class PlayerMovement : MonoBehaviour {
 
     void Update() {
             FaceInputDirection();
-      //  DebugRays();
     }
 
     void FixedUpdate() {
-        currentInputEvaluation = EvaluateInput(CastRays(GetRays(currentInput)));
+        testsThisFrame = 0;
+        //if (currentInput!=Vector2.zero)
+        //    TestInput(currentInput);
+        currentInput += CastRays(GetRays(currentInput));
+        ProcessMovementInput(currentInput);
         ApplyMovement(currentInput);
+        //currentInputEvaluation = EvaluateInput(CastRays(GetRays(thisInput)));
+        //ApplyMovement(thisInput);
     }
 
-    void FaceInputDirection() {
-        transform.rotation = SmoothedRotation
 
-            (Quaternion.AngleAxis(MovementAngle(mostRecentInput) + angleOffset, up));
-    }
+    void FaceInputDirection() => transform.rotation = SmoothedRotation
+                                     (Quaternion.AngleAxis(MovementAngle(mostRecentInput) + angleOffset, up));
+
+    void ReceiveMovementInput(Vector2 input) => currentInput = input;
 
     Quaternion SmoothedRotation(Quaternion inputRotation) =>
         Quaternion.Lerp(transform.rotation, inputRotation, angleSmoothSpeed * Time.deltaTime);
@@ -146,24 +153,26 @@ public class PlayerMovement : MonoBehaviour {
             currentInput = input == Vector2.zero ? currentInput : MaxedInput(input);
             mostRecentInput = currentInput;
         } else {
-            currentInput = input.normalized; //;
+            currentInput = input.normalized;
             mostRecentInput = currentInput != Vector2.zero ? currentInput : mostRecentInput;
         }
-        //DEBUG
-        //END DEBUG
-        //if (input!=Vector2.zero)
-        //    TestInput (input.normalized);
     }
 
     Vector2 MaxedInput(Vector2 input) => (input * 20f).normalized;
 
-    void TestInput(Vector2 currentInput) {
-        distances = CastRays(GetRays(currentInput));
-            var eval = EvaluateInput(distances);
-        if (eval == InputEvaluation.valid)
-            ApplyMovement(currentInput);
-        else
-            TestInput(MutateInput(currentInput, eval));
+    void TestInput(Vector2 thisInput) {
+        if (testsThisFrame < maxTestsPerFrame) {
+            testsThisFrame++;
+           // distances = CastRays(GetRays(thisInput));
+            currentInputEvaluation = EvaluateInput(distances);
+            if (currentInputEvaluation == InputEvaluation.valid)
+                currentInput = thisInput;
+            else
+                TestInput(MutateInput(thisInput, currentInputEvaluation));
+        } else {
+            print("reached max tests per frame");
+            currentInput = thisInput;
+        }
     }
 
     Vector2 MutateInput(Vector2 inputToMutate, InputEvaluation eval) {
@@ -171,9 +180,9 @@ public class PlayerMovement : MonoBehaviour {
         case InputEvaluation.facingWall:
             return Vector2.zero;
         case InputEvaluation.wallToRight:
-            return inputToMutate.Rotate(-degreesPerInputMutation);
-        case InputEvaluation.wallToLeft:
             return inputToMutate.Rotate(degreesPerInputMutation);
+        case InputEvaluation.wallToLeft:
+            return inputToMutate.Rotate(-degreesPerInputMutation);
         case InputEvaluation.valid:
             print("trying to mutate valid input");
             return inputToMutate;
@@ -183,48 +192,51 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     InputEvaluation EvaluateInput(float[] currentDistances) {
-        if (AllDistancesAreVirtuallyTheSame(currentDistances) &&
-            AllDistancesAreGreaterThanZero(currentDistances))
-            return InputEvaluation.facingWall;
         if (WallToTheLeft(currentDistances))
             return InputEvaluation.wallToLeft;
         if (WallToTheRight(currentDistances))
             return InputEvaluation.wallToRight;
+        if (AllDistancesAreVirtuallyTheSame(currentDistances) &&
+            AllDistancesAreGreaterThanZero(currentDistances))
+            return InputEvaluation.facingWall;
         return InputEvaluation.valid;
     }
 
-    static bool WallToTheRight(float[] currentDistances) => currentDistances[2] > 0f && currentDistances[0] > 0f;
-    static bool WallToTheLeft(float[] currentDistances) => currentDistances[1] > 0f && currentDistances[0] > 0f;
+    static bool WallToTheRight(float[] currentDistances) => currentDistances[2] > 0f && currentDistances[0] == 0f;
+    static bool WallToTheLeft(float[] currentDistances) => currentDistances[0] > 0f && currentDistances[2] == 0f;
 
     static bool AllDistancesAreGreaterThanZero(float[] distances) =>
         (distances[0] > 0 && distances[1] > 0 && distances[2] > 0);
 
     bool AllDistancesAreVirtuallyTheSame(float[] distances) =>
-        ((distances[0] + distances[1] + distances[2]) / 3) < distanceSimilarityMargin;
+        Mathf.Abs(distances[0] - distances[1]) < distanceSimilarityMargin &&
+        Mathf.Abs(distances[1] - distances[2]) < distanceSimilarityMargin &&
+        Mathf.Abs(distances[0] - distances[2]) < distanceSimilarityMargin;
 
-    float[] CastRays(Ray[] rays) {
-        for (var i = 0; i < rays.Length; i++) distances[i] = Cast(rays[i]);
-        return distances;
+    Vector2 CastRays(Ray[] rays) {
+        //for (var i = 0; i < rays.Length; i++) distances[i] = Cast(rays[i]);
+        return Cast(rays[0]) + Cast(rays[1]) + Cast(rays[2]);
     }
 
-    float Cast(Ray ray) {
-        RaycastHit2D hit;
-        hit = Physics2D.Raycast(ray.origin, ray.direction, movementDirectionRayLength, obstacleMask);
+    Vector2 Cast(Ray ray) {
+        var hit = Physics2D.Raycast(ray.origin, ray.direction, movementDirectionRayLength, obstacleMask);
         Debug.DrawRay(ray.origin, ray.direction * movementDirectionRayLength, hit.transform != null ?
                                                                                   Color.red : Color.green);
-        return hit.distance;
+        if (hit.transform != null)
+            return Vector2.Reflect(ray.direction, hit.normal) * hit.distance * repelForce;
+        return Vector2.zero;
     }
 
     Ray[] GetRays(Vector2 currentInput) {
-        //TODO this should look at input, not only facing direction (and perhaps not at all)
+
         var rays = new Ray[3];
         var pos = (Vector2)transform.position;
         //var dir = (Vector2)transform.up * movementDirectionRayLength;
         var dir = currentInput * movementDirectionRayLength;
         var offset = pos + ((Vector2)currentInput * rayOffset.y);
 
-        rays[0] = new Ray(offset, dir);
-        rays[1] = new Ray(offset - ((Vector2)transform.right * rayOffset.x), dir);
+        rays[0] = new Ray(offset - ((Vector2)transform.right * rayOffset.x), dir);
+        rays[1] = new Ray(offset, dir);
         rays[2] = new Ray(offset + ((Vector2)transform.right * rayOffset.x), dir);
 
         return rays;
