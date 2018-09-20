@@ -142,3 +142,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5866865b40b942afa3a2e0b6fe5388c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  prefabs: []
+  cullState: 0
+  coords: {x: 0, y: 0}
+  tilemapComponents:
+  - {fileID: 2113883505382659866}
+  - {fileID: 8195094281111490254}
+  tilemapRenderer: {fileID: 3664157343660623764}

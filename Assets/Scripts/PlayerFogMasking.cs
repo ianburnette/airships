@@ -7,6 +7,7 @@ using UnityEngine.Serialization;
 public class PlayerFogMasking : MonoBehaviour {
 
     public bool resetFog;
+    public bool revertToSavedFog;
 
     [SerializeField] Texture2D fogTexture;
 
@@ -24,14 +25,20 @@ public class PlayerFogMasking : MonoBehaviour {
     [SerializeField] Color[] brush1dimensional;
     [SerializeField] Color[,] brush2dimensional;
 
+    Color[] savedMap;
+
     void OnEnable() {
         //fogTexture = new Texture2D (renderTexture.width, renderTexture.height);
         //fogTexture.width = renderTexture.width;
         //fogTexture.height = renderTexture.height;
-
         //fogTexture.filterMode = FilterMode.Point;
         renderer.material.mainTexture = fogTexture;
         SetBrush();
+        Settlement.OnExitSettlement += SaveMap;
+    }
+
+    void OnDisable() {
+        Settlement.OnExitSettlement -= SaveMap;
     }
 
     void SetBrush() {
@@ -47,6 +54,8 @@ public class PlayerFogMasking : MonoBehaviour {
     void Update() {
         if (resetFog)
             ResetFog();
+        if (revertToSavedFog)
+            RevertToSavedFog();
         SetupTextureInput();
         var hit = GetHit();
         if (hit.transform == null) {
@@ -55,28 +64,15 @@ public class PlayerFogMasking : MonoBehaviour {
         }
         hitTexCoords = hit.textureCoord;
         DebugFogHit(hit);
-        ApplyTexture(hitTexCoords);
+        ApplyTextureFromBrush(hitTexCoords);
         WriteAndCloseTextureInput();
-        //for (var i =0; i<renderTexture.width*.2f;i++)
-        //    for (var j =0;j<renderTexture.height;j++)
-        //        fogTexture.SetPixel((at +i),j,new Color(1,0,0));
-//
-        /*
-        Graphics.SetRenderTarget(renderTexture);
-        RenderTexture.active = renderTexture;
-        GL.PushMatrix();
-        GL.LoadPixelMatrix(0, 512, 512, 0);
-        Graphics.DrawTexture(new Rect(transform.position.x, transform.position.y, 10, 10), renderTexture);
-        GL.PopMatrix();
-        RenderTexture.active = null;
-        Graphics.SetRenderTarget(null);*/
     }
+
 
     void ResetFog() {
         SetupTextureInput();
         var cols = new Color[fogTexture.width * fogTexture.height];
-        for (var i = 0; i<cols.Length; i++)
-            cols[i] = Color.white;
+        for (var i = 0; i<cols.Length; i++) cols[i] = Color.white;
         fogTexture.SetPixels(0, 0, fogTexture.width,fogTexture.height, cols);
         WriteAndCloseTextureInput();
         resetFog = false;
@@ -89,7 +85,7 @@ public class PlayerFogMasking : MonoBehaviour {
         Debug.DrawRay(hit.point, Vector2.down / 3, Color.green);
     }
 
-    void ApplyTexture(Vector2 hitTextureCoord) {
+    void ApplyTextureFromBrush(Vector2 hitTextureCoord) {
         var currentRow = new List<Color>();
         for (var x = 0; x < fogBrush.width; x++) {
             for (var y = 0; y < fogBrush.height; y++) {
@@ -100,33 +96,16 @@ public class PlayerFogMasking : MonoBehaviour {
             SetPixels(x, hitTextureCoord, currentRow);
             currentRow.Clear();
         }
+    }
 
-        //WORKS
-        //fogTexture.SetPixels((int)(hitTextureCoord.x * fogTexture.width) - fogBrush.width/2,
-        //                     (int)(hitTextureCoord.y * fogTexture.height) - fogBrush.height/2,
-        //                     fogBrush.width, fogBrush.height, brush1dimensional);
-
-
-       // var x = (int)hitTextureCoord.x * fogTexture.width;
-       // var y = (int)hitTextureCoord.y * fogTexture.height;
-
-        //fogTexture.SetPixel
-        //    ((int)(hitTextureCoord.x * fogTexture.width),
-        //     (int)(hitTextureCoord.y * fogTexture.height),
-        //     fogClearColor);
-////
-        //
-        //fogTexture.SetPixel(x, y, fogClearColor);
-        //
-        //fogBrush.width, fogBrush.height,
-        //brush1dimensional);
+    void ApplyTextureFromSaved() {
+        fogTexture.SetPixels(0, 0, fogTexture.width, fogTexture.height, savedMap);
     }
 
     void SetPixels(int row, Vector2 hitTextureCoord, List<Color> currentRow) {
         var colors = new Color[currentRow.Count];
         //print("column count for this row is " + colors.Length);
         for (var i = 0; i < currentRow.Count; i++) colors[i] = currentRow[i];
-
 
         var xStart = ((((int)(hitTextureCoord.x * fogTexture.width)) - fogBrush.width / 2) - currentRow.Count / 2) +
                      fogBrush.width / 2;
@@ -140,15 +119,28 @@ public class PlayerFogMasking : MonoBehaviour {
         RenderTexture.active = null;
     }
 
-    void SetupTextureInput() {
-        RenderTexture.active = renderTexture;
-        //fogTexture.ReadPixels(new Rect(0, 0, fogTexture.width, fogTexture.height), 0, 0);
-    }
+    void SetupTextureInput() => RenderTexture.active = renderTexture;
 
     RaycastHit GetHit() {
         RaycastHit hit;
         Debug.DrawRay(transform.position - (transform.forward/3), transform.forward, Color.magenta);
         Physics.Raycast(transform.position, Vector3.forward, out hit, castDist, fogMask);
         return hit;
+    }
+
+    void SaveMap() {
+        var colorList = new Color[fogTexture.width * fogTexture.height];
+        for (var column = 0; column < fogTexture.width; column++) {
+            for (var row = 0; row < fogTexture.height; row++) {
+                colorList[(column * fogTexture.height) + (row)] = fogTexture.GetPixel(column, row);
+            }
+        }
+
+        savedMap = colorList;
+    }
+
+    void RevertToSavedFog() {
+        ApplyTextureFromSaved();
+        revertToSavedFog = false;
     }
 }

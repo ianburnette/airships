@@ -7,10 +7,10 @@ using System.Linq;
 public class PlayerCulling : MonoBehaviour {
     [SerializeField] Transform mapParent;
     [SerializeField] float checkTime = 2;
-    Culling[] cullMaps;
-    public Culling[,] cullMapsGrid;
-    Culling[] closestMaps;
-    Culling currentMap;
+    [SerializeField] Culling[] cullMaps;
+    [SerializeField] public Culling[,] cullMapsGrid;
+    [SerializeField] Culling[] closestMaps;
+    [SerializeField] Culling currentMap;
 
     void OnEnable() {
         cullMaps = mapParent.GetComponentsInChildren<Culling>();
@@ -41,7 +41,7 @@ public class PlayerCulling : MonoBehaviour {
     }
 
     void ActivateTheseAndCullAllElse(Culling[] mapsToKeep) {
-        foreach (Culling cull in cullMaps) cull.Cull(mapsToKeep.Contains(cull));
+        foreach (var cull in cullMaps) cull.Cull(mapsToKeep.Contains(cull));
     }
 
     void CheckClosest() {
@@ -65,5 +65,5 @@ public class PlayerCulling : MonoBehaviour {
 
     public void SetupMapGrid(int x, int y) => cullMapsGrid = new Culling[x, y];
 
-    public void NewMap(Culling newMap, int x, int y) => cullMapsGrid[x, y] = newMap;
+    public void NewMap(Culling newMap) => cullMapsGrid[newMap.coords.x, newMap.coords.y] = newMap;
 }

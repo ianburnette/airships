@@ -33,6 +33,11 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] int groundIndex;
 	[SerializeField] PlayerCulling playerCulling;
 
+	void OnEnable() {
+		playerCulling.cullMapsGrid = new Culling [mapTexture.width/tilemapChunkSize.x, mapTexture.height/tilemapChunkSize.y];
+		foreach (var chunk in tileChunks) playerCulling.NewMap(chunk.GetComponent<Culling>());
+	}
+
 	void Update() {
 		if (generate) {
 			generating = true;
@@ -47,6 +52,7 @@ public class MapGeneration : MonoBehaviour {
 
 	void ClearOldChunks() {
 		foreach (var go in tileChunks) DestroyImmediate(go);
+		tileChunks.Clear();
 	}
 
 	void Setup() {
@@ -91,20 +97,20 @@ public class MapGeneration : MonoBehaviour {
 						thisTileMap.SetTile(position, tile);
 						thisTileMap.RefreshTile(position);
 						if (tile != tiles[groundIndex] && tile != tiles[settlementIndex] && includePrefabs) {
-							CreateTree(k + i * chunkWidth, l + j * chunkHeight, 0, newMap.transform, tilemapCulling);
+							tilemapCulling.prefabs.Add(CreateTree(k + i * chunkWidth, l + j * chunkHeight, 0,
+							                                      newMap.transform));
 						}
 
 						if (tile == tiles[pickupIndex]) {
-							CreatePickup(k + i * chunkWidth, l + j * chunkHeight, newMap.transform);
+							tilemapCulling.prefabs.Add(CreatePickup(k + i * chunkWidth, l + j * chunkHeight,
+							                                        newMap.transform));
 						}
-						//if (tile == tiles[2]) CreateTree(i, j, 1);
-
 					}
 				}
 
 				tilemapCulling.CullImmediate(true);
 				tilemapCulling.coords = new Vector2Int(i, j);
-				playerCulling.NewMap(tilemapCulling, i, j);
+				playerCulling.NewMap(tilemapCulling);
 				tileChunks.Add(newMap);
 			}
 		}
@@ -112,16 +118,18 @@ public class MapGeneration : MonoBehaviour {
 		generating = false;
 	}
 
-	void CreatePickup(int i, int j, Transform parent) {
+	GameObject CreatePickup(int i, int j, Transform parent) {
 		var thisPickup = Instantiate(pickup, parent);
 		PlacePrefab(i, j, thisPickup);
+		return thisPickup;
 	}
 
-	void CreateTree(int i, int j, int treeType, Transform parent, Culling tilemapCulling) {
+	GameObject CreateTree(int i, int j, int treeType, Transform parent) {
 		var thisPrefab = Instantiate(tilePrefabs[treeType], parent);
 		PlacePrefab(i, j, thisPrefab);
 		RotatePrefab(thisPrefab);
 		thisPrefab.SetActive(false);
+		return thisPrefab;
 	}
 
 	void RotatePrefab(GameObject thisPrefab) {

@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Security;
 using UnityEngine;
+using UnityEngine.Experimental.PlayerLoop;
 
 [System.Serializable]
 [RequireComponent(typeof(SpriteRenderer))]
@@ -8,6 +10,11 @@ public class Ship : MonoBehaviour {
 
 	[SerializeField] Sprite shipSprite;
 	[SerializeField] SpriteRenderer shipSpriteRenderer;
+
+	[SerializeField] SpriteRenderer shipShadowRenderer;
+	[SerializeField] Transform shipShadow;
+	[SerializeField] float shadowDistance;
+	[SerializeField] Vector2 shadowOffsetDirection;
 
 	[SerializeField] public bool playerShip;
 
@@ -20,12 +27,28 @@ public class Ship : MonoBehaviour {
 	[SerializeField] public int cost;
 	[SerializeField] public Vector2 canvasOffset;
 
-	void OnEnable() => shipSpriteRenderer = GetComponent<SpriteRenderer>();
+	void OnEnable() {
+		SetupSprites();
+	}
+
+	void SetupSprites() {
+		shipSpriteRenderer = GetComponent<SpriteRenderer>();
+		shipShadowRenderer = shipShadow.GetComponent<SpriteRenderer>();
+		shipSpriteRenderer.sprite = shipSprite;
+		shipShadowRenderer.sprite = shipSprite;
+	}
 
 	void Update() {
 		if (shipSpriteRenderer.sprite != shipSprite)
 			shipSpriteRenderer.sprite = shipSprite;
 	}
+
+	void LateUpdate() {
+		SetShadowPosition();
+	}
+
+	void SetShadowPosition() =>
+		shipShadow.position = (Vector2)transform.position + (shadowOffsetDirection * shadowDistance);
 
 	void OnTriggerEnter2D(Collider2D other) {
 		if (!playerShip) ShipCanvas.instance.Activate(true, this);

@@ -86,6 +86,8 @@ public class PlayerMovement : MonoBehaviour {
     void EnterSettlement() {
         inSettlement = true;
         canBoost = false;
+        StopBoost();
+        CancelInvoke(nameof(ResetBoost));
     }
 
     void Boost() {
