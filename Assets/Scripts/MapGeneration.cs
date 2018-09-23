@@ -3,11 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using ProBuilder2.Common;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
 [ExecuteInEditMode]
 public class MapGeneration : MonoBehaviour {
+
+	public static MapGeneration instance;
 
 	public bool generate, setup, includePrefabs;
 
@@ -33,7 +36,10 @@ public class MapGeneration : MonoBehaviour {
 	[SerializeField] int groundIndex;
 	[SerializeField] PlayerCulling playerCulling;
 
+	public List<GameObject> pickups;
+
 	void OnEnable() {
+		instance = this;
 		playerCulling.cullMapsGrid = new Culling [mapTexture.width/tilemapChunkSize.x, mapTexture.height/tilemapChunkSize.y];
 		foreach (var chunk in tileChunks) playerCulling.NewMap(chunk.GetComponent<Culling>());
 	}
@@ -121,6 +127,8 @@ public class MapGeneration : MonoBehaviour {
 	GameObject CreatePickup(int i, int j, Transform parent) {
 		var thisPickup = Instantiate(pickup, parent);
 		PlacePrefab(i, j, thisPickup);
+		thisPickup.GetComponent<Pickup>().index = pickups.Count;
+		pickups.Add(thisPickup);
 		return thisPickup;
 	}
 
@@ -144,6 +152,11 @@ public class MapGeneration : MonoBehaviour {
 		                                            j + UnityEngine.Random.Range(-positionVariance, positionVariance),
 	                                                                                                     0) +
 		                                prefabTileOffset;
+
+	public void UpdatePickedUpPickups(List<int> alreadyPickedUp) {
+		foreach (var t in alreadyPickedUp)
+			pickups[t].SetActive(false);
+	}
 
 	TileBase GetTileFromMap(int i, int j) => (colorTileDict.First(c => c.color == mapTexture.GetPixel(i, j)).tile);
 }

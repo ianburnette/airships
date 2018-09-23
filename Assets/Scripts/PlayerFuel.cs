@@ -86,7 +86,7 @@ public class PlayerFuel : MonoBehaviour {
 
     void OutOfFuel() {
         outOfFuel = true;
-        //OnFuelDepleted?.Invoke();
+        OnFuelDepleted?.Invoke();
     }
 
     public void Increment() {

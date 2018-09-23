@@ -8,9 +8,10 @@ public class Pickup : MonoBehaviour {
 	Transform target;
 	[SerializeField] float speed;
 	[SerializeField] float distanceThreshold;
+	public int index;
 
 	void OnTriggerEnter2D(Collider2D other) {
-		if (PlayerInventory.staticPlayerInventory.AttemptToAddItemToInventory()) target = other.transform;
+		if (PlayerInventory.staticPlayerInventory.AttemptToAddItemToInventory(index)) target = other.transform;
 	}
 
 	void Update() {

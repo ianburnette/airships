@@ -10,6 +10,8 @@ public class PlayerShip : MonoBehaviour {
     [SerializeField] LayerMask playerShipLayer;
     [SerializeField] LayerMask npcLayer;
 
+    List<int> purchases;
+
     public delegate void ShipAnimatorChanged(Animator anim);
     public static event ShipAnimatorChanged OnShipAnimatorChanged;
 
@@ -31,6 +33,7 @@ public class PlayerShip : MonoBehaviour {
         currentShip.gameObject.layer = LayerMask.NameToLayer("NPC");
         currentShip.transform.GetChild(0).gameObject.layer = LayerMask.NameToLayer("NPC");
         currentShip.playerShip = false;
+        currentShip.enabled = false;
 
         currentShip = newShip;
 
@@ -41,8 +44,14 @@ public class PlayerShip : MonoBehaviour {
         currentShip.GetComponent<CircleCollider2D>().enabled = false;
         currentShip.transform.parent = transform;
         currentShip.playerShip = true;
+        HandlePurchase();
 
         OnShipAnimatorChanged?.Invoke(newShip.GetComponent<Animator>());
         OnShipChanged?.Invoke(newShip);
+    }
+
+    void HandlePurchase() {
+        purchases.Add(currentShip.cost);
+        ES2.Save(purchases, "purchases");
     }
 }

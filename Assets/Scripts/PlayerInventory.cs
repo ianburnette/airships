@@ -23,6 +23,7 @@ public class PlayerInventory : MonoBehaviour {
     [SerializeField] int totalCollectibles;
     [SerializeField] TMP_Text totalText;
     [SerializeField] GameObject collectibleRepresentation;
+    public List<int> pickupIndices;
     GameObject[] representations;
     readonly int representationPoolSize;
     int poolBookmark = 0;
@@ -37,25 +38,34 @@ public class PlayerInventory : MonoBehaviour {
         staticPlayerInventory = this;
         if (currentShip == null)
             currentShip = transform.GetChild(0).GetComponent<Ship>();
+        ReloadPickups();
         SetupInventory();
         CalculateInventory(currentShip);
         CreateRepresentationPool();
         StartCoroutine(ToggleInventory(state: false, immediate: true));
 
-        Settlement.OnEnterSettlement += RemoveItemsFromInventory;
-        Settlement.OnExitSettlement += HidePersistentInventory;
+        Settlement.OnEnterSettlement += EnterSettlement;
+        Settlement.OnExitSettlement += ExitingSettlement;
         PlayerShip.OnShipChanged += CalculateInventory;
         ShipCanvas.OnShipPurchase += Purchase;
     }
 
+    void ReloadPickups() {
+        if (!ES2.Exists("pickups")) return;
+        pickupIndices = ES2.LoadList<int>("pickups");
+        MapGeneration.instance.UpdatePickedUpPickups(pickupIndices);
+    }
+
     void OnDisable() {
-        Settlement.OnEnterSettlement -= RemoveItemsFromInventory;
-        Settlement.OnExitSettlement -= HidePersistentInventory;
+        Settlement.OnEnterSettlement -= EnterSettlement;
+        Settlement.OnExitSettlement -= ExitingSettlement;
         PlayerShip.OnShipChanged -= CalculateInventory;
         ShipCanvas.OnShipPurchase -= Purchase;
     }
 
-    void HidePersistentInventory() => StartCoroutine(ToggleInventory(state: false, immediate: false));
+    void ExitingSettlement() {
+        StartCoroutine(ToggleInventory(state: false, immediate: false));
+    }
 
     IEnumerator ToggleInventory(bool state, bool immediate) {
         if (!state && !immediate)
@@ -93,14 +103,15 @@ public class PlayerInventory : MonoBehaviour {
             inventorySlots[i].gameObject.SetActive(true);
     }
 
-    public bool AttemptToAddItemToInventory() {
+    public bool AttemptToAddItemToInventory(int pickupIndex) {
         if (currentItemsInInventory >= currentCapacity) return false;
-        AddItemToInventory();
+        AddItemToInventory(pickupIndex);
         return true;
     }
 
-    void AddItemToInventory() {
+    void AddItemToInventory(int pickupIndex) {
         inventorySlots[currentItemsInInventory].isOn = true;
+        pickupIndices.Add(pickupIndex);
         currentItemsInInventory++;
     }
 
@@ -123,16 +134,17 @@ public class PlayerInventory : MonoBehaviour {
         representation.transform.DOMove(totalText.transform.position, representationAnimDuration);
                       //.onComplete(() => ReturnToPool(representation));
 
-    void RemoveItemsFromInventory() {
+    void EnterSettlement() {
         StartCoroutine(ToggleInventory(state: true, immediate: true));
         StartCoroutine(TransferToPersistentInventory());
+        ES2.Save(pickupIndices, "pickups");
         //var difference = currentItemsInInventory - quantity;
         //for (var i = currentItemsInInventory - 1; i >= difference; i--)
         //    inventorySlots[i].isOn = false;
 
     }
 
-    //void RemoveItemsFromInventory() => RemoveItemsFromInventory(currentItemsInInventory);
+    //void EnterSettlement() => EnterSettlement(currentItemsInInventory);
 
     GameObject GetFromPool() {
         for (var i = 0; i < representationPoolSize; i++) {

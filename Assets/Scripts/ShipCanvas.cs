@@ -43,7 +43,7 @@ public class ShipCanvas : MonoBehaviour {
         activated = state;
         anim.SetBool("pending", false);
         if (state) {
-            title.text = ship.name;
+            title.text = ship.shipName;
             stats[0].value = ship.fuelEfficiency;
             stats[1].value = ship.capacity;
             stats[2].value = ship.boostEfficiency;
