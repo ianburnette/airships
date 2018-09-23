@@ -42,6 +42,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] Vector2 mostRecentInput;
     [SerializeField] bool inSettlement;
     [SerializeField] float repelForce;
+    [SerializeField] float repelSpeed;
 
     public delegate void Move(float var);
     public static event Move OnMove;
@@ -54,7 +55,7 @@ public class PlayerMovement : MonoBehaviour {
     void OnEnable() {
         PlayerInput.OnMovement += ReceiveMovementInput;
         PlayerInput.OnInteract += Boost;
-        PlayerInput.OnInteractEnd += StopBoost;
+        //PlayerInput.OnInteractEnd += StopBoost;
         PlayerLand.OnLandingStateChange += ToggleMovement;
         ShipCanvas.OnShipPurchase += SetupBoost;
         Settlement.OnEnterSettlement += EnterSettlement;
@@ -67,7 +68,7 @@ public class PlayerMovement : MonoBehaviour {
     void OnDisable() {
         PlayerInput.OnMovement -= ReceiveMovementInput;
         PlayerInput.OnInteract -= Boost;
-        PlayerInput.OnInteractEnd -= StopBoost;
+        //PlayerInput.OnInteractEnd -= StopBoost;
         PlayerLand.OnLandingStateChange -= ToggleMovement;
         ShipCanvas.OnShipPurchase -= SetupBoost;
         Settlement.OnEnterSettlement -= EnterSettlement;
@@ -130,7 +131,8 @@ public class PlayerMovement : MonoBehaviour {
         testsThisFrame = 0;
         //if (currentInput!=Vector2.zero)
         //    TestInput(currentInput);
-        currentInput += CastRays(GetRays(currentInput));
+       // currentInput = Vector2.Lerp(currentInput, currentInput + CastRays(GetRays(currentInput)),
+         //                           repelSpeed * Time.deltaTime);
         ProcessMovementInput(currentInput);
         ApplyMovement(currentInput);
         //currentInputEvaluation = EvaluateInput(CastRays(GetRays(thisInput)));
@@ -150,7 +152,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void ProcessMovementInput(Vector2 input) {
         if (boosting) {
-            currentInput = input == Vector2.zero ? currentInput : MaxedInput(input);
+            currentInput = input != Vector2.zero ? currentInput : MaxedInput(mostRecentInput);
             mostRecentInput = currentInput;
         } else {
             currentInput = input.normalized;
@@ -222,7 +224,7 @@ public class PlayerMovement : MonoBehaviour {
         var hit = Physics2D.Raycast(ray.origin, ray.direction, movementDirectionRayLength, obstacleMask);
         Debug.DrawRay(ray.origin, ray.direction * movementDirectionRayLength, hit.transform != null ?
                                                                                   Color.red : Color.green);
-        if (hit.transform != null)
+        if (hit.transform != null && Mathf.Abs(((Vector2)hit.normal - (Vector2)ray.direction).magnitude) > distanceSimilarityMargin)
             return Vector2.Reflect(ray.direction, hit.normal) * hit.distance * repelForce;
         return Vector2.zero;
     }
@@ -252,7 +254,7 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     void ApplyMovement(Vector2 input) {
-        rigidbody2D.AddForce(input * speed * Time.deltaTime);
+        rigidbody2D.AddForce(input * (speed * Time.deltaTime));
         OnMove?.Invoke(Mathf.Abs(Vector2.Distance(transform.position, previousFramePosition)));
         previousFramePosition = transform.position;
     }

@@ -46,4 +46,8 @@ public class PlayerStateMachine : MonoBehaviour {
 		if (!inSettlement)
 			GameSceneManagement.Restart();
 	}
+
+	public void RestartNow() {
+		GameSceneManagement.Restart();
+	}
 }
