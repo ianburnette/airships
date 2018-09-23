@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour {
     [SerializeField] float boostEfficiency;
     [SerializeField] float boostSpeed;
     [SerializeField] float resetTime = 2f;
+    [SerializeField] float dampSpeed;
 
     [Header("Movement Sanitation")]
     [SerializeField] Vector2 rayOffset;
@@ -40,6 +41,7 @@ public class PlayerMovement : MonoBehaviour {
     [FormerlySerializedAs("mostRecentInput")] public Vector2 currentInput;
     [SerializeField] int degreesPerInputMutation = 5;
     [SerializeField] Vector2 mostRecentInput;
+    [SerializeField] Vector2 inputDirection;
     [SerializeField] bool inSettlement;
     [SerializeField] float repelForce;
     [SerializeField] float repelSpeed;
@@ -134,6 +136,8 @@ public class PlayerMovement : MonoBehaviour {
        // currentInput = Vector2.Lerp(currentInput, currentInput + CastRays(GetRays(currentInput)),
          //                           repelSpeed * Time.deltaTime);
         ProcessMovementInput(currentInput);
+        if (boosting)
+            DampMovementInput();
         ApplyMovement(currentInput);
         //currentInputEvaluation = EvaluateInput(CastRays(GetRays(thisInput)));
         //ApplyMovement(thisInput);
@@ -141,9 +145,13 @@ public class PlayerMovement : MonoBehaviour {
 
 
     void FaceInputDirection() => transform.rotation = SmoothedRotation
-                                     (Quaternion.AngleAxis(MovementAngle(mostRecentInput) + angleOffset, up));
+                                     (Quaternion.AngleAxis(MovementAngle(inputDirection) + angleOffset, up));
 
-    void ReceiveMovementInput(Vector2 input) => currentInput = input;
+    void ReceiveMovementInput(Vector2 input) {
+        currentInput = input;
+        if (input != Vector2.zero)
+            inputDirection = input;
+    }
 
     Quaternion SmoothedRotation(Quaternion inputRotation) =>
         Quaternion.Lerp(transform.rotation, inputRotation, angleSmoothSpeed * Time.deltaTime);
@@ -152,7 +160,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void ProcessMovementInput(Vector2 input) {
         if (boosting) {
-            currentInput = input != Vector2.zero ? currentInput : MaxedInput(mostRecentInput);
+            currentInput = MaxedInput(input.magnitude < .01 ? mostRecentInput : currentInput);
             mostRecentInput = currentInput;
         } else {
             currentInput = input.normalized;
@@ -161,6 +169,13 @@ public class PlayerMovement : MonoBehaviour {
     }
 
     Vector2 MaxedInput(Vector2 input) => (input * 20f).normalized;
+
+    void DampMovementInput() {
+        currentInput = Vector2.Lerp(rigidbody2D.velocity.normalized, mostRecentInput, dampSpeed * Time.deltaTime);
+        Debug.DrawRay(transform.position, transform.up * currentInput.magnitude, Color.magenta);
+        Debug.DrawRay(transform.position, currentInput, Color.blue);
+        Debug.DrawRay(transform.position, rigidbody2D.velocity, Color.red);
+    }
 
     void TestInput(Vector2 thisInput) {
         if (testsThisFrame < maxTestsPerFrame) {
